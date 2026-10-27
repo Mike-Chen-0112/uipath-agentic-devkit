@@ -1,0 +1,8 @@
+{
+  "package": "graphifyy",
+  "version": "0.9.45",
+  "cli": "graphify",
+  "policy": "pinned",
+  "queryLogging": "forced-off-by-wrapper",
+  "defaultMode": "code-only-local"
+}

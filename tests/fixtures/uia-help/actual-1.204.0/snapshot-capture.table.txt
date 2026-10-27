@@ -1,0 +1,50 @@
+Before using this tool, make sure you have loaded the uipath-rpa skill and read its documentation. uipath-rpa/SKILL.md is the canonical reference. Direct CLI use without loading the skill bypasses authoring rules that catch errors early.
+
+                          uip rpa uia snapshot capture                          
+List top-level targets (windows and browser tabs), or drill into one to extract its element tree.
+                Use --help with nested commands for more detail.                
+
+┌─ Usage ──────────────────────────────────────────────────────────────────────┐
+│ uip rpa uia snapshot capture [w/b-ref] [--project-dir <string>] [--remote] [--visualize] [--type { Default | CV }] [--framework { Default | UIA | AA | Java }] [--all-windows] [--folder-path <string>] │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+┌─ Arguments ──────────────────────────────────────────────────────────────────┐
+│ w/b-ref   Window or browser tab target reference (e.g: w1 or b3)             │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+┌─ Options ────────────────────────────────────────────────────────────────────┐
+│ --project-dir <string>         The project directory.                        │
+│ --remote                       Execute the command on the remote machine.    │
+│ --visualize                    Briefly highlight the target element during   │
+│                                the operation (for visual confirmation).      │
+│ --type <Default|CV>            What to capture. Default captures the         │
+│                                programmatic elements of the application. CV  │
+│                                runs computer-vision analysis and captures    │
+│                                only the elements visible in the view.        │
+│                                [default: Default]                            │
+│ --framework                    UI scanning framework. Default is recommended │
+│ <Default|UIA|AA|Java>          for most apps, especially browsers.           │
+│ --all-windows                  Show all top-level windows in the rendered    │
+│                                tree, disabling the default filtering         │
+│ --folder-path <string>         The folder to write the snapshot artifacts    │
+│                                to. When omitted, a timestamped folder is     │
+│                                created under the project's                   │
+│                                .local/.uia/.interact/output folder.          │
+│ --studio-dir <path>            Path to Studio installation directory         │
+│ --robot-dir <path>             Path to Robot installation directory          │
+│ --timeout <seconds>            Timeout in seconds                            │
+│ --verbose                      Enable verbose logging                        │
+│ --policy-file <path>           Governance policy to judge this invocation by │
+│                                where the signed-in tenant has none           │
+│ --policy-file-type <type>      Format of --policy-file                       │
+│ -h, --help                     display help for command                      │
+│ --output                       Output format (default: json)                 │
+│ <table|json|yaml|plain|markd                                                 │
+│ own>                                                                         │
+│ --output-filter <expression>   JMESPath expression applied to the Data field │
+│                                of the response envelope                      │
+│ --log-level                    Log level threshold (default: info)           │
+│ <debug|info|warn|error>                                                      │
+│ --log-file <path>              Write logs to file instead of stderr          │
+│ --profile <name>               Use a named login profile                     │
+└──────────────────────────────────────────────────────────────────────────────┘

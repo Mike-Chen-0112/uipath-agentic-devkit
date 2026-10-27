@@ -1,0 +1,100 @@
+{
+  "Result": "Success",
+  "Code": "Help",
+  "Data": {
+    "Command": "uia",
+    "Description": "UI Automation CLI commands",
+    "Usage": "uip rpa uia [options] [command]",
+    "Arguments": [],
+    "Options": [
+      {
+        "Flags": "--project-dir <path>",
+        "Description": "Project directory to match against running Studio instances"
+      },
+      {
+        "Flags": "--studio-dir <path>",
+        "Description": "Path to Studio installation directory"
+      },
+      {
+        "Flags": "--robot-dir <path>",
+        "Description": "Path to Robot installation directory"
+      },
+      {
+        "Flags": "--timeout <seconds>",
+        "Description": "Timeout in seconds"
+      },
+      {
+        "Flags": "--verbose",
+        "Description": "Enable verbose logging"
+      },
+      {
+        "Flags": "--policy-file <path>",
+        "Description": "Governance policy to judge this invocation by where the signed-in tenant has none"
+      },
+      {
+        "Flags": "--policy-file-type <type>",
+        "Description": "Format of --policy-file"
+      },
+      {
+        "Flags": "-h, --help",
+        "Description": "display help for command"
+      }
+    ],
+    "Subcommands": [
+      {
+        "Name": "selector-intelligence",
+        "Description": "Selector Intelligence commands for selector evaluation."
+      },
+      {
+        "Name": "snapshot",
+        "Description": "Snapshot commands for capturing and inspecting application DOM data."
+      },
+      {
+        "Name": "object-repository",
+        "Description": "Commands for managing UIA entries in Object Repository."
+      },
+      {
+        "Name": "target-anchorable",
+        "Description": "Commands for target anchorable operations."
+      },
+      {
+        "Name": "target-app",
+        "Description": "Commands for target application operations."
+      },
+      {
+        "Name": "interact",
+        "Description": "Interact with live windows, browser tabs, and elements."
+      },
+      {
+        "Name": "reset",
+        "Description": "Stops the project's UI Automation host process via its owner Studio; the next command starts a fresh one. Any element references from previous commands become invalid."
+      },
+      {
+        "Name": "help",
+        "Description": "display help for command"
+      }
+    ],
+    "GlobalOptions": [
+      {
+        "Flags": "--output <table|json|yaml|plain|markdown>",
+        "Description": "Output format (default: json)"
+      },
+      {
+        "Flags": "--output-filter <expression>",
+        "Description": "JMESPath expression applied to the Data field of the response envelope"
+      },
+      {
+        "Flags": "--log-level <debug|info|warn|error>",
+        "Description": "Log level threshold (default: info)"
+      },
+      {
+        "Flags": "--log-file <path>",
+        "Description": "Write logs to file instead of stderr"
+      },
+      {
+        "Flags": "--profile <name>",
+        "Description": "Use a named login profile"
+      }
+    ]
+  }
+}

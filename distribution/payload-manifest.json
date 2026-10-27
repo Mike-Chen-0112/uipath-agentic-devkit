@@ -1,0 +1,490 @@
+{
+  "schemaVersion": 1,
+  "kitVersionFile": "VERSION",
+  "files": [
+    {
+      "source": "templates/payload/AGENTS.md",
+      "destination": "AGENTS.md",
+      "ownership": "preserve"
+    },
+    {
+      "source": "templates/payload/START-HERE.md",
+      "destination": "START-HERE.md",
+      "ownership": "managed"
+    },
+    {
+      "source": "templates/intake/README.md",
+      "destination": ".ai/intake/README.md",
+      "ownership": "preserve"
+    },
+    {
+      "source": "templates/REQUIREMENTS.md",
+      "destination": ".rpa-ai/templates/REQUIREMENTS.md",
+      "ownership": "managed"
+    },
+    {
+      "source": ".github/copilot-instructions.md",
+      "destination": ".github/copilot-instructions.md",
+      "ownership": "managed"
+    },
+    {
+      "source": ".github/agents/rpa-coordinator.agent.md",
+      "destination": ".github/agents/rpa-coordinator.agent.md",
+      "ownership": "managed"
+    },
+    {
+      "source": ".github/agents/rpa-developer.agent.md",
+      "destination": ".github/agents/rpa-developer.agent.md",
+      "ownership": "managed"
+    },
+    {
+      "source": ".github/agents/rpa-auditor.agent.md",
+      "destination": ".github/agents/rpa-auditor.agent.md",
+      "ownership": "managed"
+    },
+    {
+      "source": ".github/agents/rpa-documentation.agent.md",
+      "destination": ".github/agents/rpa-documentation.agent.md",
+      "ownership": "managed"
+    },
+    {
+      "source": ".github/instructions/uipath-xaml.instructions.md",
+      "destination": ".github/instructions/uipath-xaml.instructions.md",
+      "ownership": "managed"
+    },
+    {
+      "source": ".github/instructions/dependencies.instructions.md",
+      "destination": ".github/instructions/dependencies.instructions.md",
+      "ownership": "managed"
+    },
+    {
+      "source": ".github/instructions/browser-ui.instructions.md",
+      "destination": ".github/instructions/browser-ui.instructions.md",
+      "ownership": "managed"
+    },
+    {
+      "source": ".github/instructions/output-artifacts.instructions.md",
+      "destination": ".github/instructions/output-artifacts.instructions.md",
+      "ownership": "managed"
+    },
+    {
+      "source": ".github/instructions/documentation.instructions.md",
+      "destination": ".github/instructions/documentation.instructions.md",
+      "ownership": "managed"
+    },
+    {
+      "source": ".github/instructions/evidence.instructions.md",
+      "destination": ".github/instructions/evidence.instructions.md",
+      "ownership": "managed"
+    },
+    {
+      "source": ".github/instructions/graphify.instructions.md",
+      "destination": ".github/instructions/graphify.instructions.md",
+      "ownership": "managed"
+    },
+    {
+      "source": ".github/instructions/risk-routing.instructions.md",
+      "destination": ".github/instructions/risk-routing.instructions.md",
+      "ownership": "managed"
+    },
+    {
+      "source": ".github/skills/rpa-standards/SKILL.md",
+      "destination": ".github/skills/rpa-standards/SKILL.md",
+      "ownership": "managed"
+    },
+    {
+      "source": ".github/skills/humanizer/SKILL.md",
+      "destination": ".github/skills/humanizer/SKILL.md",
+      "ownership": "managed"
+    },
+    {
+      "source": ".github/skills/humanizer/LICENSE",
+      "destination": ".github/skills/humanizer/LICENSE",
+      "ownership": "managed"
+    },
+    {
+      "source": ".github/skills/caveman/SKILL.md",
+      "destination": ".github/skills/caveman/SKILL.md",
+      "ownership": "managed"
+    },
+    {
+      "source": ".github/skills/caveman/LICENSE",
+      "destination": ".github/skills/caveman/LICENSE",
+      "ownership": "managed"
+    },
+    {
+      "source": "scripts/Validate-RpaProject.ps1",
+      "destination": ".rpa-ai/scripts/Validate-RpaProject.ps1",
+      "ownership": "managed"
+    },
+    {
+      "source": "scripts/ExecutionState.ps1",
+      "destination": ".rpa-ai/scripts/ExecutionState.ps1",
+      "ownership": "managed"
+    },
+    {
+      "source": "scripts/Get-DeveloperContextProfile.ps1",
+      "destination": ".rpa-ai/scripts/Get-DeveloperContextProfile.ps1",
+      "ownership": "managed"
+    },
+    {
+      "source": "scripts/New-DeveloperContextPackage.ps1",
+      "destination": ".rpa-ai/scripts/New-DeveloperContextPackage.ps1",
+      "ownership": "managed"
+    },
+    {
+      "source": "scripts/Invoke-DeveloperValidation.ps1",
+      "destination": ".rpa-ai/scripts/Invoke-DeveloperValidation.ps1",
+      "ownership": "managed"
+    },
+    {
+      "source": "scripts/Complete-DeveloperRun.ps1",
+      "destination": ".rpa-ai/scripts/Complete-DeveloperRun.ps1",
+      "ownership": "managed"
+    },
+    {
+      "source": "scripts/DeveloperTelemetry.psm1",
+      "destination": ".rpa-ai/scripts/DeveloperTelemetry.psm1",
+      "ownership": "managed"
+    },
+    {
+      "source": "scripts/Write-DeveloperEvent.ps1",
+      "destination": ".rpa-ai/scripts/Write-DeveloperEvent.ps1",
+      "ownership": "managed"
+    },
+    {
+      "source": "scripts/Get-DeveloperRuntimeBreakdown.ps1",
+      "destination": ".rpa-ai/scripts/Get-DeveloperRuntimeBreakdown.ps1",
+      "ownership": "managed"
+    },
+    {
+      "source": "scripts/Test-ExecutionTimingConsistency.ps1",
+      "destination": ".rpa-ai/scripts/Test-ExecutionTimingConsistency.ps1",
+      "ownership": "managed"
+    },
+    {
+      "source": "scripts/UiPathCompatibility.psm1",
+      "destination": ".rpa-ai/scripts/UiPathCompatibility.psm1",
+      "ownership": "managed"
+    },
+    {
+      "source": "scripts/Get-UiPathEnvironmentCompatibility.ps1",
+      "destination": ".rpa-ai/scripts/Get-UiPathEnvironmentCompatibility.ps1",
+      "ownership": "managed"
+    },
+    {
+      "source": "scripts/Get-UiPathEnumMetadata.ps1",
+      "destination": ".rpa-ai/scripts/Get-UiPathEnumMetadata.ps1",
+      "ownership": "managed"
+    },
+    {
+      "source": "scripts/Test-UiPathXamlCompatibility.ps1",
+      "destination": ".rpa-ai/scripts/Test-UiPathXamlCompatibility.ps1",
+      "ownership": "managed"
+    },
+    {
+      "source": "scripts/ConvertFrom-UiPathDiagnostics.ps1",
+      "destination": ".rpa-ai/scripts/ConvertFrom-UiPathDiagnostics.ps1",
+      "ownership": "managed"
+    },
+    {
+      "source": "scripts/Invoke-UiPathNativeDiagnostics.ps1",
+      "destination": ".rpa-ai/scripts/Invoke-UiPathNativeDiagnostics.ps1",
+      "ownership": "managed"
+    },
+    {
+      "source": "scripts/Invoke-UiPathUiAutomation.ps1",
+      "destination": ".rpa-ai/scripts/Invoke-UiPathUiAutomation.ps1",
+      "ownership": "managed"
+    },
+    {
+      "source": "scripts/UiTargeting.psm1",
+      "destination": ".rpa-ai/scripts/UiTargeting.psm1",
+      "ownership": "managed"
+    },
+    {
+      "source": "scripts/Get-UiTargetCapabilities.ps1",
+      "destination": ".rpa-ai/scripts/Get-UiTargetCapabilities.ps1",
+      "ownership": "managed"
+    },
+    {
+      "source": "scripts/Get-UiTargetQuality.ps1",
+      "destination": ".rpa-ai/scripts/Get-UiTargetQuality.ps1",
+      "ownership": "managed"
+    },
+    {
+      "source": "scripts/Manage-UiTargetRegistry.ps1",
+      "destination": ".rpa-ai/scripts/Manage-UiTargetRegistry.ps1",
+      "ownership": "managed"
+    },
+    {
+      "source": "scripts/Resolve-UiTarget.ps1",
+      "destination": ".rpa-ai/scripts/Resolve-UiTarget.ps1",
+      "ownership": "managed"
+    },
+    {
+      "source": "scripts/Resolve-UiTargets.ps1",
+      "destination": ".rpa-ai/scripts/Resolve-UiTargets.ps1",
+      "ownership": "managed"
+    },
+    {
+      "source": "scripts/SourceFingerprint.ps1",
+      "destination": ".rpa-ai/scripts/SourceFingerprint.ps1",
+      "ownership": "managed"
+    },
+    {
+      "source": "scripts/Get-UiPathProjectMap.ps1",
+      "destination": ".rpa-ai/scripts/Get-UiPathProjectMap.ps1",
+      "ownership": "managed"
+    },
+    {
+      "source": "scripts/Get-DiagnosticsDecision.ps1",
+      "destination": ".rpa-ai/scripts/Get-DiagnosticsDecision.ps1",
+      "ownership": "managed"
+    },
+    {
+      "source": "scripts/Test-ChangedWorkflowSanity.ps1",
+      "destination": ".rpa-ai/scripts/Test-ChangedWorkflowSanity.ps1",
+      "ownership": "managed"
+    },
+    {
+      "source": "scripts/Test-UiWorkflowRobustness.ps1",
+      "destination": ".rpa-ai/scripts/Test-UiWorkflowRobustness.ps1",
+      "ownership": "managed"
+    },
+    {
+      "source": "scripts/UiWorkflowRobustness.psm1",
+      "destination": ".rpa-ai/scripts/UiWorkflowRobustness.psm1",
+      "ownership": "managed"
+    },
+    {
+      "source": "scripts/Invoke-DevKitCommand.ps1",
+      "destination": ".rpa-ai/scripts/Invoke-DevKitCommand.ps1",
+      "ownership": "managed"
+    },
+    {
+      "source": "scripts/Get-DependencyState.ps1",
+      "destination": ".rpa-ai/scripts/Get-DependencyState.ps1",
+      "ownership": "managed"
+    },
+    {
+      "source": "scripts/Refresh-BotGraph.ps1",
+      "destination": ".rpa-ai/scripts/Refresh-BotGraph.ps1",
+      "ownership": "managed"
+    },
+    {
+      "source": "scripts/Query-BotGraph.ps1",
+      "destination": ".rpa-ai/scripts/Query-BotGraph.ps1",
+      "ownership": "managed"
+    },
+    {
+      "source": "scripts/New-RpaProject.ps1",
+      "destination": ".rpa-ai/scripts/New-RpaProject.ps1",
+      "ownership": "managed"
+    },
+    {
+      "source": "scripts/Manage-RequirementsWorkspace.ps1",
+      "destination": ".rpa-ai/scripts/Manage-RequirementsWorkspace.ps1",
+      "ownership": "managed"
+    },
+    {
+      "source": "scripts/Install-Graphify.ps1",
+      "destination": ".rpa-ai/scripts/Install-Graphify.ps1",
+      "ownership": "managed"
+    },
+    {
+      "source": "scripts/Install-UiPathSkills.ps1",
+      "destination": ".rpa-ai/scripts/Install-UiPathSkills.ps1",
+      "ownership": "managed"
+    },
+    {
+      "source": "scripts/Test-ManagedFileIntegrity.ps1",
+      "destination": ".rpa-ai/scripts/Test-ManagedFileIntegrity.ps1",
+      "ownership": "managed"
+    },
+    {
+      "source": "scripts/Activate-RpaAiDevKit.ps1",
+      "destination": ".rpa-ai/scripts/Activate-RpaAiDevKit.ps1",
+      "ownership": "managed"
+    },
+    {
+      "source": "scripts/Get-DevKitDiagnostics.ps1",
+      "destination": ".rpa-ai/scripts/Get-DevKitDiagnostics.ps1",
+      "ownership": "managed"
+    },
+    {
+      "source": "scripts/Resolve-DevKitTool.ps1",
+      "destination": ".rpa-ai/scripts/Resolve-DevKitTool.ps1",
+      "ownership": "managed"
+    },
+    {
+      "source": "scripts/Install-DevKitPrerequisites.ps1",
+      "destination": ".rpa-ai/scripts/Install-DevKitPrerequisites.ps1",
+      "ownership": "managed"
+    },
+    {
+      "source": "scripts/Initialize-UiPathRuntime.ps1",
+      "destination": ".rpa-ai/scripts/Initialize-UiPathRuntime.ps1",
+      "ownership": "managed"
+    },
+    {
+      "source": "scripts/Import-RpaAiDevKit.ps1",
+      "destination": ".rpa-ai/scripts/Import-RpaAiDevKit.ps1",
+      "ownership": "managed"
+    },
+    {
+      "source": "scripts/Check-DevKitRemoteVersion.ps1",
+      "destination": ".rpa-ai/scripts/Check-DevKitRemoteVersion.ps1",
+      "ownership": "managed"
+    },
+    {
+      "source": "scripts/Update-RpaAiDevKit.ps1",
+      "destination": ".rpa-ai/scripts/Update-RpaAiDevKit.ps1",
+      "ownership": "managed"
+    },
+    {
+      "source": "scripts/Test-OutlookCapability.ps1",
+      "destination": ".rpa-ai/scripts/Test-OutlookCapability.ps1",
+      "ownership": "managed"
+    },
+    {
+      "source": "validation/validation-policy.json",
+      "destination": ".rpa-ai/validation/validation-policy.json",
+      "ownership": "managed"
+    },
+    {
+      "source": "validation/ui-target-policy.json",
+      "destination": ".rpa-ai/validation/ui-target-policy.json",
+      "ownership": "managed"
+    },
+    {
+      "source": "validation/uipath-serialization-policy.json",
+      "destination": ".rpa-ai/validation/uipath-serialization-policy.json",
+      "ownership": "managed"
+    },
+    {
+      "source": "graph/config/graphify-version.json",
+      "destination": ".rpa-ai/validation/graphify-version.json",
+      "ownership": "managed"
+    },
+    {
+      "source": "docs/DEPENDENCY-SETUP-PROTOCOL.md",
+      "destination": ".rpa-ai/docs/DEPENDENCY-SETUP-PROTOCOL.md",
+      "ownership": "managed"
+    },
+    {
+      "source": "docs/UI-CAPTURE-PROTOCOL.md",
+      "destination": ".rpa-ai/docs/UI-CAPTURE-PROTOCOL.md",
+      "ownership": "managed"
+    },
+    {
+      "source": "docs/OUTPUT-QUALITY-PROTOCOL.md",
+      "destination": ".rpa-ai/docs/OUTPUT-QUALITY-PROTOCOL.md",
+      "ownership": "managed"
+    },
+    {
+      "source": "docs/TROUBLESHOOTING.md",
+      "destination": ".rpa-ai/docs/TROUBLESHOOTING.md",
+      "ownership": "managed"
+    },
+    {
+      "source": "docs/PLATFORM-SUPPORT.md",
+      "destination": ".rpa-ai/docs/PLATFORM-SUPPORT.md",
+      "ownership": "managed"
+    },
+    {
+      "source": "examples/PILOT-SCENARIOS.md",
+      "destination": ".rpa-ai/docs/PILOT-SCENARIOS.md",
+      "ownership": "managed"
+    },
+    {
+      "source": "templates/bot-context/applications.md",
+      "destination": ".ai/context/applications.md",
+      "ownership": "preserve"
+    },
+    {
+      "source": "templates/bot-context/file-journey.md",
+      "destination": ".ai/context/file-journey.md",
+      "ownership": "preserve"
+    },
+    {
+      "source": "templates/bot-context/architecture.md",
+      "destination": ".ai/context/architecture.md",
+      "ownership": "preserve"
+    },
+    {
+      "source": "templates/bot-context/bot-overview.md",
+      "destination": ".ai/context/bot-overview.md",
+      "ownership": "preserve"
+    },
+    {
+      "source": "templates/bot-context/business-rules.md",
+      "destination": ".ai/context/business-rules.md",
+      "ownership": "preserve"
+    },
+    {
+      "source": "templates/bot-context/known-issues.md",
+      "destination": ".ai/context/known-issues.md",
+      "ownership": "preserve"
+    },
+    {
+      "source": "templates/bot-context/orchestrator-resources.md",
+      "destination": ".ai/context/orchestrator-resources.md",
+      "ownership": "preserve"
+    },
+    {
+      "source": "templates/bot-context/test-catalog.md",
+      "destination": ".ai/context/test-catalog.md",
+      "ownership": "preserve"
+    },
+    {
+      "source": "templates/evidence/change-evidence.md",
+      "destination": ".ai/evidence/CHANGE-EVIDENCE-TEMPLATE.md",
+      "ownership": "preserve"
+    },
+    {
+      "source": "templates/bot-feedback/dev-kit-improvements.md",
+      "destination": ".ai/feedback/dev-kit-improvements.md",
+      "ownership": "preserve"
+    },
+    {
+      "source": "templates/bot-docs/README.md",
+      "destination": "README.md",
+      "ownership": "preserve"
+    },
+    {
+      "source": "templates/bot-docs/docs/Bot-Documentation.md",
+      "destination": "docs/Bot-Documentation.md",
+      "ownership": "preserve"
+    },
+    {
+      "source": "templates/bot-docs/docs/Testing.md",
+      "destination": "docs/Testing.md",
+      "ownership": "preserve"
+    },
+    {
+      "source": "templates/bot-docs/docs/CHANGELOG.md",
+      "destination": "docs/CHANGELOG.md",
+      "ownership": "preserve"
+    },
+    {
+      "source": "graph/.graphifyignore.template",
+      "destination": ".graphifyignore",
+      "ownership": "managed"
+    },
+    {
+      "source": "graph/.graphifyrc.template",
+      "destination": ".graphifyrc",
+      "ownership": "managed"
+    }
+  ],
+  "gitignoreEntries": [
+    "graphify-out/cost.json",
+    "graphify-out/cache/",
+    ".devkit/cache/",
+    ".rpa-ai/local/",
+    ".ai/evidence/*.log",
+    ".ai/evidence/*.tmp",
+    ".uipath/.skills/"
+  ]
+}

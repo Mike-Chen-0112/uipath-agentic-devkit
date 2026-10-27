@@ -1,0 +1,15 @@
+{
+  "cliVersion": "1.204.0",
+  "capturedAtUtc": "2026-10-21",
+  "source": "Unmodified stdout of the installed uip CLI run from a Development bot project directory (where Studio exposes nested UIA commands). Help/usage text only; no project data, credentials, cookies, or session content.",
+  "commands": {
+    "uia.json": "uip rpa uia --help --output json",
+    "target-app.json": "uip rpa uia target-app --help --output json",
+    "resolve-defaults.json": "uip rpa uia target-app resolve-defaults --help --output json",
+    "snapshot.json": "uip rpa uia snapshot --help --output json",
+    "snapshot-capture.json": "uip rpa uia snapshot capture --help --output json",
+    "resolve-defaults.table.txt": "uip rpa uia target-app resolve-defaults --help --output table",
+    "snapshot-capture.table.txt": "uip rpa uia snapshot capture --help --output table"
+  },
+  "note": "Captured help is syntax evidence only. It is not installed-capability, live-capture, or target-generation proof."
+}

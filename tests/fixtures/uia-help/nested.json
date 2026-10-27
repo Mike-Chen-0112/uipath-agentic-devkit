@@ -1,0 +1,94 @@
+{
+  "provenance": "Synthetic nested-command help modeled on the official uip JSON help envelope (Result/Code/Data with Command, Usage, Arguments, Options, Subcommands, GlobalOptions). The central repository has no Studio-backed UIA project, so the installed CLI returns the root 'uia' help for every child path. These fixtures are test doubles, NOT installed capability or live discovery evidence.",
+  "help": {
+    "target-app": {
+      "Result": "Success", "Code": "Help",
+      "Data": {
+        "Command": "target-app", "Description": "Synthetic target application commands",
+        "Usage": "uip rpa uia target-app [options] [command]",
+        "Arguments": [],
+        "Options": [ { "Flags": "-h, --help", "Description": "display help for command" } ],
+        "Subcommands": [ { "Name": "resolve-defaults", "Description": "Synthetic leaf" } ],
+        "GlobalOptions": [
+          { "Flags": "--output <table|json|yaml|plain|markdown>", "Description": "Output format" },
+          { "Flags": "--log-level <debug|info|warn|error>", "Description": "Log level" }
+        ]
+      }
+    },
+    "target-app resolve-defaults": {
+      "Result": "Success", "Code": "Help",
+      "Data": {
+        "Command": "resolve-defaults", "Description": "Synthetic leaf command",
+        "Usage": "uip rpa uia target-app resolve-defaults [options]",
+        "Arguments": [],
+        "Options": [
+          { "Flags": "--refs <refs>", "Description": "Captured reference" },
+          { "Flags": "--name <name>", "Description": "Target name" },
+          { "Flags": "--project-dir <path>", "Description": "Project directory" },
+          { "Flags": "-h, --help", "Description": "display help for command" }
+        ],
+        "Subcommands": [],
+        "GlobalOptions": [
+          { "Flags": "--output <table|json|yaml|plain|markdown>", "Description": "Output format" },
+          { "Flags": "--log-level <debug|info|warn|error>", "Description": "Log level" }
+        ]
+      }
+    },
+    "snapshot": {
+      "Result": "Success", "Code": "Help",
+      "Data": {
+        "Command": "snapshot", "Description": "Synthetic snapshot commands",
+        "Usage": "uip rpa uia snapshot [options] [command]",
+        "Arguments": [],
+        "Options": [ { "Flags": "-h, --help", "Description": "display help for command" } ],
+        "Subcommands": [
+          { "Name": "capture", "Description": "Synthetic leaf" },
+          { "Name": "filter", "Description": "Synthetic leaf" }
+        ],
+        "GlobalOptions": [ { "Flags": "--output <table|json|yaml|plain|markdown>", "Description": "Output format" } ]
+      }
+    },
+    "snapshot capture": {
+      "Result": "Success", "Code": "Help",
+      "Data": {
+        "Command": "capture", "Description": "Synthetic leaf command",
+        "Usage": "uip rpa uia snapshot capture [options]",
+        "Arguments": [],
+        "Options": [
+          { "Flags": "--project-dir <path>", "Description": "Project directory" },
+          { "Flags": "--window-title <title>", "Description": "Window title" },
+          { "Flags": "--include-hidden", "Description": "Include hidden elements" },
+          { "Flags": "--depth [levels]", "Description": "Optional depth" },
+          { "Flags": "-h, --help", "Description": "display help for command" }
+        ],
+        "Subcommands": [],
+        "GlobalOptions": [ { "Flags": "--output <table|json|yaml|plain|markdown>", "Description": "Output format" } ]
+      }
+    },
+    "interact": {
+      "Result": "Success", "Code": "Help",
+      "Data": {
+        "Command": "interact", "Description": "Synthetic interaction commands",
+        "Usage": "uip rpa uia interact [options] [command]",
+        "Arguments": [],
+        "Options": [ { "Flags": "-h, --help", "Description": "display help for command" } ],
+        "Subcommands": [ { "Name": "click", "Description": "Synthetic leaf" } ],
+        "GlobalOptions": [ { "Flags": "--output <table|json|yaml|plain|markdown>", "Description": "Output format" } ]
+      }
+    },
+    "interact click": {
+      "Result": "Success", "Code": "Help",
+      "Data": {
+        "Command": "click", "Description": "Synthetic leaf command with a positional argument",
+        "Usage": "uip rpa uia interact click [options] <target-ref>",
+        "Arguments": [ { "Name": "target-ref", "Description": "Target reference", "Required": true } ],
+        "Options": [
+          { "Flags": "--double", "Description": "Double click" },
+          { "Flags": "-h, --help", "Description": "display help for command" }
+        ],
+        "Subcommands": [],
+        "GlobalOptions": [ { "Flags": "--output <table|json|yaml|plain|markdown>", "Description": "Output format" } ]
+      }
+    }
+  }
+}

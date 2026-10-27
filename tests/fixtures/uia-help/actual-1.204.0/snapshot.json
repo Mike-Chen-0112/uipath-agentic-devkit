@@ -1,0 +1,84 @@
+{
+  "Result": "Success",
+  "Code": "Help",
+  "Data": {
+    "Command": "snapshot",
+    "Description": "Snapshot commands for capturing and inspecting application DOM data.",
+    "Usage": "uip rpa uia snapshot [options] [command]",
+    "Arguments": [],
+    "Options": [
+      {
+        "Flags": "--project-dir <path>",
+        "Description": "Project directory to match against running Studio instances"
+      },
+      {
+        "Flags": "--studio-dir <path>",
+        "Description": "Path to Studio installation directory"
+      },
+      {
+        "Flags": "--robot-dir <path>",
+        "Description": "Path to Robot installation directory"
+      },
+      {
+        "Flags": "--timeout <seconds>",
+        "Description": "Timeout in seconds"
+      },
+      {
+        "Flags": "--verbose",
+        "Description": "Enable verbose logging"
+      },
+      {
+        "Flags": "--policy-file <path>",
+        "Description": "Governance policy to judge this invocation by where the signed-in tenant has none"
+      },
+      {
+        "Flags": "--policy-file-type <type>",
+        "Description": "Format of --policy-file"
+      },
+      {
+        "Flags": "-h, --help",
+        "Description": "display help for command"
+      }
+    ],
+    "Subcommands": [
+      {
+        "Name": "capture",
+        "Description": "List top-level targets (windows and browser tabs), or drill into one to extract its element tree."
+      },
+      {
+        "Name": "load",
+        "Description": "Load snapshot artifacts already written to a folder back into the reference cache, without reading the live UI"
+      },
+      {
+        "Name": "semantic-find",
+        "Description": "Find elements in a window or browser tab by describing them in natural language. Recommended when the app is not supported by the tree-based snapshot flow."
+      },
+      {
+        "Name": "help",
+        "Description": "display help for command"
+      }
+    ],
+    "GlobalOptions": [
+      {
+        "Flags": "--output <table|json|yaml|plain|markdown>",
+        "Description": "Output format (default: json)"
+      },
+      {
+        "Flags": "--output-filter <expression>",
+        "Description": "JMESPath expression applied to the Data field of the response envelope"
+      },
+      {
+        "Flags": "--log-level <debug|info|warn|error>",
+        "Description": "Log level threshold (default: info)"
+      },
+      {
+        "Flags": "--log-file <path>",
+        "Description": "Write logs to file instead of stderr"
+      },
+      {
+        "Flags": "--profile <name>",
+        "Description": "Use a named login profile"
+      }
+    ]
+  }
+}

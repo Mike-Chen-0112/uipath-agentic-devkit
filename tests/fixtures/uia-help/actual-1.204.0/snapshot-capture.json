@@ -1,0 +1,98 @@
+{
+  "Result": "Success",
+  "Code": "Help",
+  "Data": {
+    "Command": "capture",
+    "Description": "List top-level targets (windows and browser tabs), or drill into one to extract its element tree.",
+    "Usage": "uip rpa uia snapshot capture [w/b-ref] [--project-dir <string>] [--remote] [--visualize] [--type { Default | CV }] [--framework { Default | UIA | AA | Java }] [--all-windows] [--folder-path <string>]",
+    "Arguments": [
+      {
+        "Name": "w/b-ref",
+        "Description": "Window or browser tab target reference (e.g: w1 or b3)",
+        "Required": false
+      }
+    ],
+    "Options": [
+      {
+        "Flags": "--project-dir <string>",
+        "Description": "The project directory."
+      },
+      {
+        "Flags": "--remote",
+        "Description": "Execute the command on the remote machine."
+      },
+      {
+        "Flags": "--visualize",
+        "Description": "Briefly highlight the target element during the operation (for visual confirmation)."
+      },
+      {
+        "Flags": "--type <Default|CV>",
+        "Description": "What to capture. Default captures the programmatic elements of the application. CV runs computer-vision analysis and captures only the elements visible in the view. [default: Default]",
+        "Default": "Default"
+      },
+      {
+        "Flags": "--framework <Default|UIA|AA|Java>",
+        "Description": "UI scanning framework. Default is recommended for most apps, especially browsers."
+      },
+      {
+        "Flags": "--all-windows",
+        "Description": "Show all top-level windows in the rendered tree, disabling the default filtering"
+      },
+      {
+        "Flags": "--folder-path <string>",
+        "Description": "The folder to write the snapshot artifacts to. When omitted, a timestamped folder is created under the project's .local/.uia/.interact/output folder."
+      },
+      {
+        "Flags": "--studio-dir <path>",
+        "Description": "Path to Studio installation directory"
+      },
+      {
+        "Flags": "--robot-dir <path>",
+        "Description": "Path to Robot installation directory"
+      },
+      {
+        "Flags": "--timeout <seconds>",
+        "Description": "Timeout in seconds"
+      },
+      {
+        "Flags": "--verbose",
+        "Description": "Enable verbose logging"
+      },
+      {
+        "Flags": "--policy-file <path>",
+        "Description": "Governance policy to judge this invocation by where the signed-in tenant has none"
+      },
+      {
+        "Flags": "--policy-file-type <type>",
+        "Description": "Format of --policy-file"
+      },
+      {
+        "Flags": "-h, --help",
+        "Description": "display help for command"
+      }
+    ],
+    "Subcommands": [],
+    "GlobalOptions": [
+      {
+        "Flags": "--output <table|json|yaml|plain|markdown>",
+        "Description": "Output format (default: json)"
+      },
+      {
+        "Flags": "--output-filter <expression>",
+        "Description": "JMESPath expression applied to the Data field of the response envelope"
+      },
+      {
+        "Flags": "--log-level <debug|info|warn|error>",
+        "Description": "Log level threshold (default: info)"
+      },
+      {
+        "Flags": "--log-file <path>",
+        "Description": "Write logs to file instead of stderr"
+      },
+      {
+        "Flags": "--profile <name>",
+        "Description": "Use a named login profile"
+      }
+    ]
+  }
+}

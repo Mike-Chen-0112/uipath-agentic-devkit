@@ -1,0 +1,83 @@
+{
+  "Result": "Success",
+  "Code": "Help",
+  "Data": {
+    "Command": "resolve-defaults",
+    "Description": "Resolve the target apps from snapshot refs and write the target definition files.",
+    "Usage": "uip rpa uia target-app resolve-defaults --refs <string> --name <string> [--project-dir <string>] [--remote] [--description <string>]",
+    "Arguments": [],
+    "Options": [
+      {
+        "Flags": "--project-dir <string>",
+        "Description": "The project directory."
+      },
+      {
+        "Flags": "--remote",
+        "Description": "Execute the command on the remote machine."
+      },
+      {
+        "Flags": "--refs <string>",
+        "Description": "JSON array of refs to resolve."
+      },
+      {
+        "Flags": "--name <string>",
+        "Description": "The display name for the target application."
+      },
+      {
+        "Flags": "--description <string>",
+        "Description": "An optional description for the entry."
+      },
+      {
+        "Flags": "--studio-dir <path>",
+        "Description": "Path to Studio installation directory"
+      },
+      {
+        "Flags": "--robot-dir <path>",
+        "Description": "Path to Robot installation directory"
+      },
+      {
+        "Flags": "--timeout <seconds>",
+        "Description": "Timeout in seconds"
+      },
+      {
+        "Flags": "--verbose",
+        "Description": "Enable verbose logging"
+      },
+      {
+        "Flags": "--policy-file <path>",
+        "Description": "Governance policy to judge this invocation by where the signed-in tenant has none"
+      },
+      {
+        "Flags": "--policy-file-type <type>",
+        "Description": "Format of --policy-file"
+      },
+      {
+        "Flags": "-h, --help",
+        "Description": "display help for command"
+      }
+    ],
+    "Subcommands": [],
+    "GlobalOptions": [
+      {
+        "Flags": "--output <table|json|yaml|plain|markdown>",
+        "Description": "Output format (default: json)"
+      },
+      {
+        "Flags": "--output-filter <expression>",
+        "Description": "JMESPath expression applied to the Data field of the response envelope"
+      },
+      {
+        "Flags": "--log-level <debug|info|warn|error>",
+        "Description": "Log level threshold (default: info)"
+      },
+      {
+        "Flags": "--log-file <path>",
+        "Description": "Write logs to file instead of stderr"
+      },
+      {
+        "Flags": "--profile <name>",
+        "Description": "Use a named login profile"
+      }
+    ]
+  }
+}

@@ -1,0 +1,34 @@
+Before using this tool, make sure you have loaded the uipath-rpa skill and read its documentation. uipath-rpa/SKILL.md is the canonical reference. Direct CLI use without loading the skill bypasses authoring rules that catch errors early.
+
+                    uip rpa uia target-app resolve-defaults                     
+Resolve the target apps from snapshot refs and write the target definition files.
+                Use --help with nested commands for more detail.                
+
+┌─ Usage ──────────────────────────────────────────────────────────────────────┐
+│ uip rpa uia target-app resolve-defaults --refs <string> --name <string> [--project-dir <string>] [--remote] [--description <string>] │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+┌─ Options ────────────────────────────────────────────────────────────────────┐
+│ --project-dir <string>         The project directory.                        │
+│ --remote                       Execute the command on the remote machine.    │
+│ --refs <string>                JSON array of refs to resolve.                │
+│ --name <string>                The display name for the target application.  │
+│ --description <string>         An optional description for the entry.        │
+│ --studio-dir <path>            Path to Studio installation directory         │
+│ --robot-dir <path>             Path to Robot installation directory          │
+│ --timeout <seconds>            Timeout in seconds                            │
+│ --verbose                      Enable verbose logging                        │
+│ --policy-file <path>           Governance policy to judge this invocation by │
+│                                where the signed-in tenant has none           │
+│ --policy-file-type <type>      Format of --policy-file                       │
+│ -h, --help                     display help for command                      │
+│ --output                       Output format (default: json)                 │
+│ <table|json|yaml|plain|markd                                                 │
+│ own>                                                                         │
+│ --output-filter <expression>   JMESPath expression applied to the Data field │
+│                                of the response envelope                      │
+│ --log-level                    Log level threshold (default: info)           │
+│ <debug|info|warn|error>                                                      │
+│ --log-file <path>              Write logs to file instead of stderr          │
+│ --profile <name>               Use a named login profile                     │
+└──────────────────────────────────────────────────────────────────────────────┘
