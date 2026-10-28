@@ -109,10 +109,10 @@ if (-not $projectExists) {
     try {
         & $refreshScript -TargetBotPath $TargetBotPath -Mode Status
     } catch {
-        Write-Check 'Bot-local graph' $false $_.Exception.Message
+        Write-Host "[WARN] Optional bot-local Graphify status unavailable: $($_.Exception.Message)"
     }
 } else {
-    Write-Check 'Graph refresh script' $false $refreshScript
+    Write-Host '[INFO] Optional graph refresh script is missing.'
 }
 
 if ($fail) {

@@ -170,7 +170,7 @@ function Test-PackageFreshness {
     $reasons = New-Object System.Collections.Generic.List[string]
     $snapshot = Get-CurrentFingerprint
     if ([string]$Package.freshness.sourceFingerprint -ne [string]$snapshot.sourceFingerprint) { Add-Reason $reasons 'SOURCE_FINGERPRINT_MISMATCH' }
-    if ([string]$Package.freshness.graphConfigFingerprint -ne [string]$snapshot.graphConfigFingerprint) { Add-Reason $reasons 'GRAPH_CONFIG_FINGERPRINT_MISMATCH' }
+    if ([string]$Package.graph.fullGraphSha256 -and [string]$Package.freshness.graphConfigFingerprint -ne [string]$snapshot.graphConfigFingerprint) { Add-Reason $reasons 'GRAPH_CONFIG_FINGERPRINT_MISMATCH' }
     $graphFile = Resolve-ProjectPath ([string]$Package.graph.fullGraphPath)
     if ([string]$Package.graph.fullGraphSha256) {
         if (-not (Test-Path -LiteralPath $graphFile -PathType Leaf)) { Add-Reason $reasons 'GRAPH_MISSING' }
@@ -363,7 +363,9 @@ if (Test-Path -LiteralPath $fullGraphPath -PathType Leaf) {
 if (Test-Path -LiteralPath $fullGraphRefreshPath -PathType Leaf) {
     $refreshState = [System.IO.File]::ReadAllText($fullGraphRefreshPath, [System.Text.Encoding]::UTF8) | ConvertFrom-Json
 } elseif ($ExpectedGraphFingerprint) { Add-Reason $fallbackReasons 'GRAPH_REFRESH_STATE_MISSING' }
-if (-not $refreshState -and -not $ExpectedGraphFingerprint) { $graph = $null }
+# Use graph artifacts only when the handoff explicitly requires their fingerprint.
+# A pre-existing stale graph must not invalidate a Mapper-only task.
+if (-not $ExpectedGraphFingerprint) { $graph = $null; $refreshState = $null }
 if ($refreshState) {
     if ([string]$refreshState.sourceFingerprint -ne [string]$snapshot.sourceFingerprint) { Add-Reason $fallbackReasons 'GRAPH_FINGERPRINT_MISMATCH' }
     if ($ExpectedGraphFingerprint -and [string]$refreshState.sourceFingerprint -ne $ExpectedGraphFingerprint) { Add-Reason $fallbackReasons 'GRAPH_FINGERPRINT_MISMATCH' }

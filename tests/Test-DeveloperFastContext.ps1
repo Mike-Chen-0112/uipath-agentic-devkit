@@ -159,6 +159,8 @@ try {
     $staleRefresh.sourceFingerprint = '1' * 64
     Write-Json (Join-Path $testRoot 'graphify-out\refresh-state-stale.json') $staleRefresh
     Assert-Fallback (Invoke-Prepare -Name 'stale-graph' -RefreshPath 'graphify-out/refresh-state-stale.json' -ExpectedSource $snapshot.sourceFingerprint) 'GRAPH_FINGERPRINT_MISMATCH' 'Stale graph fingerprint'
+    $mapIgnoresStaleGraph = Invoke-Prepare -Name 'mapper-stale-graph' -RefreshPath 'graphify-out/refresh-state-stale.json' -ExpectedSource $snapshot.sourceFingerprint -Switches @{ ExpectedGraphFingerprint = '' }
+    Assert-True ($mapIgnoresStaleGraph.decision.fastContextUsed -and -not $mapIgnoresStaleGraph.graph.fullGraphSha256) 'Unrequested stale graph blocked Mapper-only task.'
     Assert-Fallback (Invoke-Prepare -Name 'architecture' -ExpectedSource $snapshot.sourceFingerprint -Switches @{ ArchitectureChange = $true }) 'ARCHITECTURE_CHANGE' 'Architecture change'
     Assert-Fallback (Invoke-Prepare -Name 'interface' -ExpectedSource $snapshot.sourceFingerprint -Switches @{ ArgumentInterfaceChange = $true }) 'ARGUMENT_INTERFACE_CHANGE' 'Argument/interface change'
     Assert-Fallback (Invoke-Prepare -Name 'ambiguous' -ExpectedSource $snapshot.sourceFingerprint -Switches @{ AmbiguousScope = $true }) 'AMBIGUOUS_SCOPE' 'Ambiguous scope'
