@@ -114,6 +114,10 @@ if ($line -eq 'rpa|templates|search|--help') {
 if ($line -eq 'rpa|search-templates|--help') {
     if ($family -eq 'fallback') { exit 0 } else { exit 2 }
 }
+if ($Arguments.Count -ge 2 -and $Arguments[0] -eq 'rpa' -and $Arguments[1] -eq 'get-object-repository') {
+    [ordered]@{ applications = @([ordered]@{ name = 'DevelopmentFixtureApp'; screens = @() }) } | ConvertTo-Json -Depth 8
+    exit 0
+}
 if ($line -in @('skills|install|--agent|copilot|--local','skills|update|--agent|copilot|--local')) {
     exit 0
 }
@@ -368,6 +372,7 @@ exit 0
     Assert-True ($validationScriptText -match 'RiskClassification' -and $validationScriptText -match 'diagnostics_decision' -and $validationScriptText -match 'diagnosticsDecisionReason' -and $validationScriptText -match 'unexplainedResidual') 'Risk-based diagnostics evidence or detailed validation timing is missing.'
     Assert-True ($validationScriptText -match 'uipVersionResult' -and $validationScriptText -match 'UiPath CLI version check ended' -and $validationScriptText -match 'StageEnd.*Stage validation') 'Validation CLI-probe cleanup coverage is missing.'
     $activationScriptText = Get-Content (Join-Path $root 'scripts\Activate-RpaAiDevKit.ps1') -Raw
+    Assert-True ($activationScriptText -match 'if \(\$EnableGraphify\)' -and $activationScriptText -match 'IncludeGraphify:\$EnableGraphify') 'Graphify installation is not opt-in.'
     Assert-True ($activationScriptText -match 'project\.json' -and $activationScriptText -match 'Graphify extraction deferred') 'New-bot activation does not defer Graphify extraction.'
     $executionStateText = Get-Content (Join-Path $root 'scripts\ExecutionState.ps1') -Raw
     Assert-True ($executionStateText -match 'started_at' -and $executionStateText -match 'elapsed_seconds' -and $executionStateText -notmatch 'hard_limit_seconds\s*=' -and $executionStateText -notmatch 'BUDGET_BLOCKED' -and $executionStateText -match 'max_repair_loops = 3' -and $executionStateText -match 'REPAIR_LOOP_LIMIT_REACHED' -and $executionStateText -match 'bottleneck') 'Execution timing without a time budget, or the three-loop repair limit, is missing.'
@@ -398,6 +403,7 @@ exit 0
         Assert-True (Test-Path (Join-Path $payload.FullName ".rpa-ai\scripts\$v116Helper")) "v0.11.7 runtime helper is missing from payload: $v116Helper"
     }
     Assert-True (Test-Path (Join-Path $payload.FullName '.rpa-ai\validation\uipath-serialization-policy.json')) 'UiPath serialization policy is missing from payload.'
+    Assert-True (Test-Path (Join-Path $payload.FullName '.rpa-ai\scripts\Get-OfficialObjectRepository.ps1')) 'Official OR CLI inventory helper is missing.'
     Assert-True (Test-Path (Join-Path $payload.FullName '.rpa-ai\scripts\UiTargeting.psm1')) 'UI targeting runtime module is missing from payload.'
     Assert-True (Test-Path (Join-Path $payload.FullName '.rpa-ai\scripts\Get-UiTargetCapabilities.ps1')) 'UI target capability helper is missing from payload.'
     Assert-True (Test-Path (Join-Path $payload.FullName '.rpa-ai\scripts\Get-UiTargetQuality.ps1')) 'UI target quality helper is missing from payload.'
@@ -1239,6 +1245,11 @@ exit 0
     $processProject = Get-Content (Join-Path $processBot 'project.json') -Raw | ConvertFrom-Json
     Assert-True ($processProject.targetFramework -eq 'Portable') 'Portable target framework was not passed to current CLI.'
     Assert-True ($processProject.expressionLanguage -eq 'VisualBasic') 'Visual Basic default was not passed to current CLI.'
+    $officialOr = & (Join-Path $root 'scripts\Get-OfficialObjectRepository.ps1') -TargetBotPath $processBot -ApprovedDevelopment -NonSensitiveDevelopmentData -Json | ConvertFrom-Json
+    Assert-True ($officialOr.status -eq 'INVENTORY_UNVERIFIED' -and -not $officialOr.captureCompletionAuthority -and $officialOr.repository.applications[0].name -eq 'DevelopmentFixtureApp') 'Official OR inventory claimed live proof or lost CLI data.'
+    $orApprovalBlocked = $false
+    try { & (Join-Path $root 'scripts\Get-OfficialObjectRepository.ps1') -TargetBotPath $processBot -Json | Out-Null } catch { $orApprovalBlocked = $_.Exception.Message -match 'APPROVED_NON_SENSITIVE_DEVELOPMENT_CONTEXT_REQUIRED' }
+    Assert-True $orApprovalBlocked 'Official OR inventory ran without Development approval.'
     $processEvidence = Get-Content (Join-Path $processBot '.ai\evidence\project-scaffold.json') -Raw | ConvertFrom-Json
     Assert-True ($processEvidence.commandFamily -eq 'uip rpa init') 'Current CLI command family was not recorded.'
     Assert-True ($processEvidence.transferHashVerification -eq 'PASS') 'Transferred Process scaffold hashes were not verified.'

@@ -166,6 +166,19 @@ try {
     Assert-Fallback (Invoke-Prepare -Name 'missing-activity' -ExpectedSource $snapshot.sourceFingerprint -Activity @('MissingActivity')) 'MISSING_RELEVANT_ACTIVITY_LOCATION' 'Missing activity location'
     Assert-Fallback (Invoke-Prepare -Name 'full-source' -ExpectedSource $snapshot.sourceFingerprint -Switches @{ ExplicitFullSourceRequirement = $true }) 'EXPLICIT_FULL_SOURCE_REQUIREMENT' 'Explicit full-source requirement'
 
+    # Localized R1 should remain eligible with no optional Graphify artifacts.
+    Move-Item (Join-Path $testRoot 'graphify-out\graph.json') (Join-Path $testRoot 'graphify-out\graph.json.off')
+    Move-Item (Join-Path $testRoot 'graphify-out\refresh-state.json') (Join-Path $testRoot 'graphify-out\refresh-state.json.off')
+    try {
+        $mapOnly = Invoke-Prepare -Name 'mapper-only' -ExpectedSource $snapshot.sourceFingerprint -Switches @{ ExpectedGraphFingerprint = '' }
+        Assert-True ($mapOnly.decision.fastContextUsed -and -not $mapOnly.graph.fullGraphSha256) 'Mapper-only Fast Context was blocked by missing optional Graphify.'
+        $mapOnlyValid = & $packageScript -Action Validate -ProjectPath $testRoot -PackagePath '.ai/evidence/mapper-only.json' -Json | ConvertFrom-Json
+        Assert-True ($mapOnlyValid.decision.fastContextUsed) 'Mapper-only package validation required a missing graph.'
+    } finally {
+        Move-Item (Join-Path $testRoot 'graphify-out\graph.json.off') (Join-Path $testRoot 'graphify-out\graph.json')
+        Move-Item (Join-Path $testRoot 'graphify-out\refresh-state.json.off') (Join-Path $testRoot 'graphify-out\refresh-state.json')
+    }
+
     $stalePackage = Invoke-Prepare -Name 'source-authority' -ExpectedSource $snapshot.sourceFingerprint
     Write-Utf8 (Join-Path $testRoot 'Selected.xaml') ((Get-Content -Raw (Join-Path $testRoot 'Selected.xaml')) + [Environment]::NewLine + '<!-- changed after package -->')
     $validated = & $packageScript -Action Validate -ProjectPath $testRoot -PackagePath '.ai/evidence/source-authority.json' -Json | ConvertFrom-Json

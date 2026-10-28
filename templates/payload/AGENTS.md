@@ -39,7 +39,7 @@
 - Development resources only; Production access and deployment are prohibited.
 - `Requirements/` is human-owned business intent and evidence. Inventory it first, use `REQUIREMENTS.md` as its structured entry point, inspect supporting files selectively, and never silently modify or generate artifacts inside it.
 - Follow `.github/instructions/browser-ui.instructions.md` for browser/UI work and live target capture.
-- Use Chrome by default for new browser activity unless the requirement or target application explicitly requires another browser. Resolve logical targets through `.rpa-ai/scripts/Resolve-UiTarget.ps1` before exploration or implementation: compatible live-validated registry target, Object Repository, strict/DOM, anchor, fuzzy, semantic DOM, semantic image/CV, image, then coordinates only as a last resort. Capability detection is local and never upgrades packages. Prefer UiPath UI Automation activities and resolved descriptors over code blocks; document any exception.
+- Use Chrome by default for new browser activity unless explicitly overridden. Query official OR first with `.rpa-ai/scripts/Get-OfficialObjectRepository.ps1 -ApprovedDevelopment -NonSensitiveDevelopmentData -Json`, then use official UIA skill/CLI for live target validation or capture. OR inventory alone is not live proof. Legacy Registry/inline targets may use `Resolve-UiTarget.ps1`; no new parallel Selector Registry is required for fresh targets.
 - Do not store credentials, tokens, sensitive page content, or unnecessary screenshots.
 
 # Conventions
@@ -53,7 +53,7 @@
 - Use `.rpa-ai/scripts/SourceFingerprint.ps1` for shared executable/documentation/graph-configuration freshness and `.rpa-ai/scripts/Invoke-DevKitCommand.ps1` for supported long-running commands.
 - Use `.rpa-ai/scripts/Write-DeveloperEvent.ps1` for source/edit/UI/package operations not already instrumented, and route subprocesses through `.rpa-ai/scripts/Invoke-DevKitCommand.ps1`; never store raw XAML, DOM, screenshots, or large output in the ledger. Use `.rpa-ai/scripts/Invoke-DeveloperValidation.ps1` for one coherent, risk-proportional validation checkpoint: cheap structure/package/enum checks, content-parsed native diagnostics when serialization risk requires them, then the required final build. Missing, incomplete, higher-risk, or uncertain facts run diagnostics; valid low-risk Fast Lane behavior remains. Use `.rpa-ai/scripts/Complete-DeveloperRun.ps1` once for deterministic evidence, runtime breakdown, final fingerprints, delivery-state enforcement, and compact next-role handoff.
 - For an existing bot, use `.rpa-ai/scripts/Get-UiPathProjectMap.ps1 -Json` as compact structural navigation before broad search or raw XAML reading. Treat the map as a hint and current XAML as authority; expand when invokes are unresolved/dynamic or evidence requires it.
-- For a new bot, check `project.json` before repository analysis and defer Graphify until the stable finalization step. For an existing bot, reuse Graphify when the source fingerprint is unchanged.
+- For new and existing bots, use the deterministic Project Mapper by default. Graphify is optional; install/refresh only for unresolved material dependency analysis, and reuse matching graph snapshots if explicitly enabled.
 
 # Detailed Documentation
 

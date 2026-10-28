@@ -8,7 +8,9 @@
 - Provide `New-RpaProject.ps1 -Json` success schema for a future Python Router while retaining official CLI project generation, collision protection, staged transfer hashes, rollback and Requirements initialization.
 - Support opt-in `-SlimPayload` on export/install (omitting only optional Humanizer/Caveman prose Skills: 4/95 entries); do not remove existing optional files on upgrade.
 - Add mocked regression coverage for JSON output, summary/detailed telemetry and slim/full payloads.
-- Do not yet change Graphify, Copilot Agent routing, Selector Registry or UIA behavior.
+- Make Graphify opt-in at activation/import; rely on Project Mapper for ordinary tasks and permit graph-free Fast Context.
+- Add ephemeral official OR inventory via `Get-OfficialObjectRepository.ps1` and make Agent guidance official-first; keep legacy Selector Registry for existing inline/Registry targets until a live pilot proves safe migration.
+- Do not replace the Copilot Agent runtime, delete legacy Registry data, or claim live UIA success without a Windows pilot.
 
 
 ### v0.12.1

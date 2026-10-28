@@ -42,7 +42,7 @@
 # Dependencies
 
 - Windows PowerShell 5.1 or PowerShell 7+, VS Code with GitHub Copilot. Git is optional for bots (change review falls back to file snapshots).
-- Official UiPath CLI and pinned local-only Graphify are installed for bot use when required.
+- Official UiPath CLI is the default toolchain; pinned local-only Graphify is installed only on request for unresolved impact analysis.
 - Runtime readiness uses the actual compiler runtimeconfig and architecture, not an assumed .NET version. `Initialize-UiPathRuntime.ps1` verifies existing frameworks and, by default, installs a missing runtime for the current user from official Microsoft sources only, without elevation or global PATH changes (`-NoInstall` to verify only). The runner passes a verified fresh local runtime record into the child .NET environment. Runtime availability, compiler startup, and actual restore/build are separate checks.
 - Compatibility distinguishes project generator metadata from the actual installed or supplied authoring host and preserves valid package pins. For UI Automation, the exact package's official nuspec minimum Studio requirement takes precedence over numeric release lines: `MET` permits cross-release selection without reviewed JSON; `NOT_MET` blocks even same-line or reviewed selections. Missing metadata remains `UNKNOWN` and retains conservative release-line behavior; manual reviewed schema1 JSON matching actual `studioVersion`, `cliVersion`, exact package version, and an official HTTPS `docs.uipath.com` reference remains available. The helper hashes metadata into compatibility evidence and its fingerprint. A URL or unsupported boolean alone is not proof; selection does not replace installation, build, or live UI capture.
 - Central changes use PowerShell and Git; business bot dependencies belong in the installed bot project.
@@ -69,7 +69,7 @@
 - `ExecutionState.ps1 -Action EnvironmentStart -Reason <scope>` / `EnvironmentEnd -PhaseStatus PASS|BLOCKED` optionally record setup time; they are timing markers only. See `docs/DEPENDENCY-SETUP-PROTOCOL.md`.
 - Reuse valid `AGENTS.md` context and load detailed context only for topics in the Change Plan and Impact Set.
 - Keep detailed procedures in scoped instruction files and specialized official UiPath skills.
-- Graphify is reuse-first for existing bots and deferred until stable finalization for new bots; dependency restore is reused when its fingerprint matches.
+- Project Mapper is default. Graphify is optional and on-demand, not a prerequisite for scaffolding, activation or fast context; dependency restore is reused when its fingerprint matches.
 - Shared `SourceFingerprint.ps1` provides schema-versioned executable, documentation, and graph-configuration fingerprints; `Invoke-DevKitCommand.ps1` records command duration, exit status, timeout, and output.
 
 # Detailed Documentation
