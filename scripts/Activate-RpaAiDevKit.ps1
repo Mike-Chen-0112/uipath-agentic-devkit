@@ -123,7 +123,7 @@ if (Test-Path (Join-Path $TargetBotPath 'project.json') -PathType Leaf) {
     Write-Host '[INFO] New-bot workspace detected; Graphify extraction deferred until the scaffold is stable when requested.'
 }
 
-& $diagnosticsScript -TargetBotPath $TargetBotPath
+& $diagnosticsScript -TargetBotPath $TargetBotPath -CheckGraphify:$EnableGraphify
 if ($LASTEXITCODE -ne 0) { throw "Dev Kit diagnostics failed with exit code $LASTEXITCODE." }
 Write-Host ''
 Write-Host '+------------------------------------------------------+'

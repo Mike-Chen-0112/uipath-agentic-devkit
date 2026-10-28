@@ -1,6 +1,7 @@
 [CmdletBinding()]
 param(
-    [string]$TargetBotPath = (Get-Location).Path
+    [string]$TargetBotPath = (Get-Location).Path,
+    [switch]$CheckGraphify
 )
 
 $ErrorActionPreference = 'Continue'
@@ -101,7 +102,9 @@ if (Test-Path $integrityScript -PathType Leaf) {
 
 $refreshScript = Join-Path $TargetBotPath '.rpa-ai\scripts\Refresh-BotGraph.ps1'
 $projectExists = Test-Path (Join-Path $TargetBotPath 'project.json') -PathType Leaf
-if (-not $projectExists) {
+if (-not $CheckGraphify) {
+    Write-Host '[INFO] Optional Graphify check skipped (on-demand).'
+} elseif (-not $projectExists) {
     Write-Host '[INFO] Bot-local graph - deferred until official new-bot scaffolding creates project.json.'
 } elseif (-not $graphifyCommand -or -not (Test-Path (Join-Path $TargetBotPath 'graphify-out\graph.json') -PathType Leaf)) {
     Write-Host '[INFO] Bot-local graph - absent; Project Mapper is the default. Run Activate-RpaAiDevKit.ps1 -EnableGraphify when a graph is needed.'

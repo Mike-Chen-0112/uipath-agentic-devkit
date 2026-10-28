@@ -176,6 +176,10 @@ try {
         Assert-True ($mapOnly.decision.fastContextUsed -and -not $mapOnly.graph.fullGraphSha256) 'Mapper-only Fast Context was blocked by missing optional Graphify.'
         $mapOnlyValid = & $packageScript -Action Validate -ProjectPath $testRoot -PackagePath '.ai/evidence/mapper-only.json' -Json | ConvertFrom-Json
         Assert-True ($mapOnlyValid.decision.fastContextUsed) 'Mapper-only package validation required a missing graph.'
+        Write-Utf8 (Join-Path $testRoot 'graphify-out\graph.json') '{malformed unrequested graph'
+        $mapWithMalformedUnrequestedGraph = Invoke-Prepare -Name 'mapper-bad-unrequested-graph' -ExpectedSource $snapshot.sourceFingerprint -Switches @{ ExpectedGraphFingerprint = '' }
+        Assert-True ($mapWithMalformedUnrequestedGraph.decision.fastContextUsed) 'Malformed unrequested graph was parsed by Mapper-only path.'
+        Remove-Item (Join-Path $testRoot 'graphify-out\graph.json') -Force
     } finally {
         Move-Item (Join-Path $testRoot 'graphify-out\graph.json.off') (Join-Path $testRoot 'graphify-out\graph.json')
         Move-Item (Join-Path $testRoot 'graphify-out\refresh-state.json.off') (Join-Path $testRoot 'graphify-out\refresh-state.json')

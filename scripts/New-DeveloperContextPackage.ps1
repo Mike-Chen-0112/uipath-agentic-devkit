@@ -357,10 +357,10 @@ $graph = $null
 $refreshState = $null
 # A graph is optional; an absent graph must not force a full-context fallback.
 # Explicit expected fingerprints still require a matching graph.
-if (Test-Path -LiteralPath $fullGraphPath -PathType Leaf) {
+if ($ExpectedGraphFingerprint -and (Test-Path -LiteralPath $fullGraphPath -PathType Leaf)) {
     $graph = [System.IO.File]::ReadAllText($fullGraphPath, [System.Text.Encoding]::UTF8) | ConvertFrom-Json
 } elseif ($ExpectedGraphFingerprint) { Add-Reason $fallbackReasons 'GRAPH_MISSING' }
-if (Test-Path -LiteralPath $fullGraphRefreshPath -PathType Leaf) {
+if ($ExpectedGraphFingerprint -and (Test-Path -LiteralPath $fullGraphRefreshPath -PathType Leaf)) {
     $refreshState = [System.IO.File]::ReadAllText($fullGraphRefreshPath, [System.Text.Encoding]::UTF8) | ConvertFrom-Json
 } elseif ($ExpectedGraphFingerprint) { Add-Reason $fallbackReasons 'GRAPH_REFRESH_STATE_MISSING' }
 # Use graph artifacts only when the handoff explicitly requires their fingerprint.
