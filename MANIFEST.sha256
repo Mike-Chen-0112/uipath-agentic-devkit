@@ -1,3 +1,4 @@
+ae90a3cb3ddebed38b7c23f4c2daef4364c5e43d912354137fd5a77d50e480c1  ./scripts/Get-OfficialObjectRepository.ps1
 a822810e5d7f336f9d16baeea2bd2e4409eaf6826476269c93afd0379ea51f47  ./.ai/feedback/dev-kit-improvements.md
 d1b012fb0aafecbf539c02741ee6c1cc5c656731581f498cf98587b88d9ec45b  ./.github/agents/rpa-auditor.agent.md
 d722a1ee5216ba09a5de8734d4a31c54bd3c945758538f8e133223007d874ff7  ./.github/agents/rpa-coordinator.agent.md
@@ -20,9 +21,9 @@ caa1be9cba41c1afb88fe730ab1a4e04728295ea5b29ac2ee9f003a4ffbe3a77  ./.github/skil
 4754188fba1f0f94738e9f3877983450c97a211aab30876f74f3d4b414c58a0b  ./.gitignore
 1df5fceb58d2ae3dd24e61312bf71de2cae0fa1a3f101d24ef832252e999d48f  ./AGENTS.md
 c1e99f7b0c915a88d6d56d101f9be48f74fab0bae9d9814d8ea2b49eb9aa8194  ./distribution/payload-manifest.json
-859a75d284b6866086a39135e9521dcd0f7881359a9d3b29d1e0a42e72e8c412  ./docs/CHANGELOG.md
+7af1bccb08d56c41b0ec277a04060199c51eac116877e8fa392ad3ec704fd006  ./docs/CHANGELOG.md
 26f94ddf128ccded36bbe64db8b9b54916031c5c63714b8ae0fcf86a0271ffd3  ./docs/DEPENDENCY-SETUP-PROTOCOL.md
-5d68661a665d1f0ef482fca2b73d7c015a84e347e16ec49052da92f578e9efc7  ./docs/GRAPHIFY.md
+cf4702d8fa65b81150c5a547abefe98c9c2b79fe2b758eb5fa3f03165e63bc17  ./docs/GRAPHIFY.md
 af08432e024cf552013d0e41700868959c41db077961aad9b8cd82f4a3189d65  ./docs/IMPROVEMENT-BACKLOG.md
 edd743da0361c6dee26b58a5d597f1b2a9e6663dc5faa3cdaccc09b394922f63  ./docs/METHODOLOGY.md
 9a87144506354d39571db5a86a4d4edf3b5b55b8a9938e9153ee66e72375f359  ./docs/OUTPUT-QUALITY-PROTOCOL.md
@@ -33,15 +34,15 @@ edd743da0361c6dee26b58a5d597f1b2a9e6663dc5faa3cdaccc09b394922f63  ./docs/METHODO
 54678fe77cc596e2b4b8c2ebb106614b4338793997b937e9f6706271124b91e9  ./docs/SMOKE-TEST.md
 0f03fb3e9d6ece265bcae8fc563508f55f95d55c2ee181fc907ee5b6939cac2a  ./docs/SOURCES.md
 58781d14c999822bff4699efd9aa4231f29f89a2730c86c11a2cda0898aac5f9  ./docs/TROUBLESHOOTING.md
-8440ddebdd77b7b4baa778dea0a96c81d1b76a4ae32bdd01382c757ed06bcbd4  ./docs/UI-CAPTURE-PROTOCOL.md
+27056bf3aaa09a8aa16ac9ce4d606d795253fc88666c0bef879f41b02d7b629e  ./docs/UI-CAPTURE-PROTOCOL.md
 5207fcda761daa8188d07075a8f36d7a12f8aaedb619a11a17294f09a8ffde49  ./examples/EXAMPLE-PROMPTS.md
 fad606b535d39accc8a532fb0e2a81722757f50fe04a3deb42ba5fba120a9802  ./examples/PILOT-SCENARIOS.md
 749ec903b953a02f1c8605c95d6c75eee217397b58f2f154606f8b7fb647e85b  ./graph/.graphifyignore.template
 ee84e8edc162f1e8160ad7bbff6920b559fd0ecb951119aa58f19f82ab3aa251  ./graph/.graphifyrc.template
 7bbf99d108a3237e63af81bd8e95fdc80de1bad30fc9ffe49f01031083134c37  ./graph/config/graphify-version.json
 6a7b840556e4d1465fe53b0beb9495fb5f039215548bc6c913f957aaf38ef031  ./graph/README.md
-f37fcc66e57dc53732920b2d1971dd064680f285b0eb48bab6517864b60a64ae  ./README.md
-4b9f29e0989b6887d19d824b775c6c2edfe0f81ba24c17e94b6b89a29ce63d6e  ./scripts/Activate-RpaAiDevKit.ps1
+dd390c4f37f510bc642595abe1faa00b5c3375747556b16d74ffc9ec500453d2  ./README.md
+13fca1086982956bb40764d70e6aa6bd78bcec135d9ed78f766daaa8dc03bd78  ./scripts/Activate-RpaAiDevKit.ps1
 34bddf24f7a48293d05d2d3df138712c650de22b4b6205761dc137dee3ccfed2  ./scripts/Check-DevKitRemoteVersion.ps1
 e92e1bb727e62c679f0ed2f236f307a6f5827bb8555939208cb6e23bb24e6077  ./scripts/Complete-DeveloperRun.ps1
 40c56db78a3c121ecb137f63601b7df533994c000c813ae59a4f49b65424694b  ./scripts/ConvertFrom-UiPathDiagnostics.ps1
@@ -51,7 +52,7 @@ a20b454a7f13ca205574f1cac2cf9f932c5a9f4576d5cda9e3ebcb84bcbd1fbd  ./scripts/Expo
 79096b77e301a5ed9bb230da10f6b5171c08e4f162e4b9c7193fb8beaf3cc00a  ./scripts/Get-DependencyState.ps1
 bf3218ffe4aa1efb1c0fc42d8151f284351a33fa90471fc6ba402eba91bf426c  ./scripts/Get-DeveloperContextProfile.ps1
 67c465becf4c734683acdff1bae9ec0dc4c57cebd850ea4cfe121489575bd447  ./scripts/Get-DeveloperRuntimeBreakdown.ps1
-6f4954b678f7b1bdf2e979ef123aa1c64cd058569e9ec14956746ff2cfe5db8d  ./scripts/Get-DevKitDiagnostics.ps1
+b4910120be896399515effe701a4dae18b71a97c383eda0c402c10354fcbe063  ./scripts/Get-DevKitDiagnostics.ps1
 b527350d805bef4d7b404d093eea992affd9d90c94c8e82b378f8a6f1433e940  ./scripts/Get-DiagnosticsDecision.ps1
 6aa9c80029171cccea8dcfd949a7b20acb04cabc02abb176b5272c8168ee0bd7  ./scripts/Get-UiPathEnumMetadata.ps1
 0537535c8f4fc276eb14e4e2a3617df6817ce3ca66a9cca532f8679a82a0bdf3  ./scripts/Get-UiPathEnvironmentCompatibility.ps1
