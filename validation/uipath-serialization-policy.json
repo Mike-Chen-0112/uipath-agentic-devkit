@@ -1,0 +1,11 @@
+{
+  "schemaVersion": 1,
+  "policyVersion": "1.0",
+  "enumProperties": [
+    {
+      "property": "ElementType",
+      "enumType": "UIElementType",
+      "optional": true
+    }
+  ]
+}

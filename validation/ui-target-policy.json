@@ -1,0 +1,59 @@
+{
+  "schemaVersion": 1,
+  "registrySchemaVersion": 2,
+  "selectorQuality": {
+    "baseScore": 50,
+    "goodThreshold": 80,
+    "acceptableThreshold": 60,
+    "fragileThreshold": 35,
+    "stableIdBonus": 30,
+    "stableNameBonus": 18,
+    "stableRoleBonus": 12,
+    "stableAriaBonus": 20,
+    "stableDataAttributeBonus": 22,
+    "reliableAnchorBonus": 15,
+    "dynamicIdPenalty": 38,
+    "volatileValuePenalty": 18,
+    "indexPenalty": 12,
+    "longHierarchyPenalty": 22,
+    "genericSelectorPenalty": 32,
+    "ambiguousMatchPenalty": 40,
+    "coordinateScore": 10
+  },
+  "exploration": {
+    "maxStrategiesPerTarget": 8,
+    "maxEquivalentAttempts": 1,
+    "maxAttemptLedgerEntries": 64
+  },
+  "artifacts": {
+    "maxReferencedArtifactBytes": 1048576,
+    "maxDescriptorCharacters": 8192,
+    "maxInputBytes": 65536
+  },
+  "strategyOrder": {
+    "Web": [
+      "Registry",
+      "ObjectRepository",
+      "StrictSelector",
+      "DomSelector",
+      "AnchorSelector",
+      "FuzzySelector",
+      "SemanticDom",
+      "SemanticImage",
+      "ComputerVision",
+      "Image",
+      "Coordinate"
+    ],
+    "Native": [
+      "Registry",
+      "ObjectRepository",
+      "StrictSelector",
+      "AnchorSelector",
+      "FuzzySelector",
+      "SemanticImage",
+      "ComputerVision",
+      "Image",
+      "Coordinate"
+    ]
+  }
+}

@@ -1,0 +1,49 @@
+# RPA AI Dev Kit - Graphify local-safe default
+# Goal: index code/config structures locally and avoid semantic extraction that may call a model backend.
+
+# Generated / runtime content
+graphify-out/
+.ai/intake/
+.ai/context/
+.ai/evidence/
+.ai/feedback/
+.rpa-ai/
+.github/skills/
+.uipath/
+.local/
+.devkit/ui-targets/
+Requirements/
+output/
+outputs/
+results/
+downloads/
+
+# Human documentation / binary artifacts are excluded from the default graph.
+# Agents still read .ai/context directly.
+*.md
+*.mdx
+*.qmd
+*.txt
+*.rst
+*.yaml
+*.yml
+*.pdf
+*.png
+*.jpg
+*.jpeg
+*.webp
+*.gif
+*.mp4
+*.mov
+*.mp3
+*.wav
+*.docx
+*.xlsx
+*.xls
+*.pptx
+*.csv
+*.tsv
+*.xml
+*.html
+
+# Keep UiPath/code/config structures indexable (for example .xaml, .json, .ps1).

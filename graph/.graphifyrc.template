@@ -1,0 +1,3 @@
+# Shared Graphify project configuration managed by the RPA AI Dev Kit.
+# Keep deliberately minimal. Add approved organization-wide settings here only after pilot validation.
+viz_node_limit=500

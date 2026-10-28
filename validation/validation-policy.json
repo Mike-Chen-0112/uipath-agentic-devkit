@@ -1,0 +1,563 @@
+{
+  "schemaVersion": 15,
+  "environment": "development-only",
+  "executionBudget": {
+    "stateScript": ".rpa-ai/scripts/ExecutionState.ps1",
+    "statePath": ".ai/evidence/execution-state.json",
+    "clock": "ACTIVE_EXECUTION_SECONDS",
+    "reportedClocks": ["TOTAL_WALL_SECONDS", "ACTIVE_EXECUTION_SECONDS", "USER_WAIT_SECONDS", "EXTERNAL_INTERRUPTION_SECONDS"],
+    "pauseResume": ["Pause", "Resume", "InterruptionStart", "InterruptionEnd"],
+    "historyDirectory": ".ai/evidence/execution-history",
+    "commandScript": ".rpa-ai/scripts/Invoke-DevKitCommand.ps1",
+    "fingerprintScript": ".rpa-ai/scripts/SourceFingerprint.ps1",
+    "stateWarningThresholdBytes": 5242880,
+    "commandOutputPolicy": "Full output is stored once at output_path; execution state retains only compact command counts/latest metadata and artifact path, byte size, and SHA-256 references.",
+    "developerTelemetry": {
+      "ledger": ".ai/evidence/developer-events.jsonl",
+      "breakdownScript": ".rpa-ai/scripts/Get-DeveloperRuntimeBreakdown.ps1",
+      "consistencyScript": ".rpa-ai/scripts/Test-ExecutionTimingConsistency.ps1",
+      "targetCoveragePercent": 90,
+      "preferredCoveragePercent": 95,
+      "rawContentForbidden": true
+    },
+    "timeBudget": "NONE",
+    "maxRepairLoops": 3
+  },
+  "routing": {
+    "projectCheckBeforeRepositoryAnalysis": true,
+    "newBotGraphStateBeforeScaffold": "DEFERRED_NEW_BOT",
+    "newBotGraphSync": "one final stable synchronization",
+    "existingBotGraphPolicy": "reuse-first, refresh-on-change"
+  },
+  "requirementsWorkspace": {
+    "path": "Requirements",
+    "entryPoint": "Requirements/REQUIREMENTS.md",
+    "ownership": "HUMAN",
+    "newProjectPolicy": "create missing folder and entry point after successful scaffold transfer; preserve existing content",
+    "existingProjectPolicy": "discover and use when present; never create solely because an existing project lacks it",
+    "discoveryPolicy": "inventory first, read entry point, inspect supporting files selectively",
+    "contentTelemetryForbidden": true
+  },
+  "browserDefaults": {
+    "browser": "Chrome",
+    "implementation": "UiPath UI Automation activities",
+    "fallback": "Require an explicit alternate-browser or code decision and record the reason",
+    "captureRequiredBeforeAuthoring": true
+  },
+  "validationOrder": ["project-json", "xml-xaml-sanity", "package-compatibility", "enum-property-compatibility", "native-diagnostics-decision", "native-diagnostics-when-required", "restore-or-reuse", "analyzer", "final-build", "functional-test"],
+  "nativeValidation": {
+    "workflowCommand": "uip rpa get-errors --file-path <workflow> --project-dir <project> --min-severity error",
+    "contentParsingRequiredRegardlessOfExitCode": true,
+    "riskTriggered": true,
+    "perWriteInvocationForbidden": true,
+    "reuseKey": ["workflow source hash", "dependency fingerprint", "environment fingerprint", "validation policy version"],
+    "unchangedFailureAction": "BLOCKED",
+    "finalBuildRequiredFor": ["new project", "generated workflow", "materially changed project"],
+    "deliveryStateFields": ["validationRequired", "validationCompleted", "deliveryReady", "blockedReason"]
+  },
+  "uiPathSerialization": {
+    "policy": ".rpa-ai/validation/uipath-serialization-policy.json",
+    "environmentScript": ".rpa-ai/scripts/Get-UiPathEnvironmentCompatibility.ps1",
+    "enumMetadataScript": ".rpa-ai/scripts/Get-UiPathEnumMetadata.ps1",
+    "xamlCompatibilityScript": ".rpa-ai/scripts/Test-UiPathXamlCompatibility.ps1",
+    "invalidRequiredProperty": "UIPATH_XAML_ENUM_INCOMPATIBLE",
+    "optionalUnprovenProperty": "OMIT",
+    "preservePinnedDependencies": true,
+    "automaticNewerReleaseTrainUpgrade": false
+  },
+  "gateReusePolicy": {
+    "successfulGatesMayReuse": ["diagnostics", "build", "analyzer", "dependency-restore"],
+    "reuseRequires": ["shared executable source fingerprint", "fingerprint schema match", "matching CLI/environment evidence", "matching dependency fingerprint for build", "prior status PASS"],
+    "neverReuseByDefault": ["functional-test", "output-artifact-quality", "browser-ui-target", "outlook-capability"],
+    "failureInvalidates": "the failed gate and all downstream gates that consume its output"
+  },
+  "fingerprintPolicy": {
+    "schemaVersion": 2,
+    "sourceScript": ".rpa-ai/scripts/SourceFingerprint.ps1",
+    "executableKey": "sourceFingerprint",
+    "documentationKey": "documentationFingerprint",
+    "graphConfigurationKey": "graphConfigFingerprint",
+    "dependencyFingerprintSeparate": true,
+    "worksWithoutGit": true,
+    "excludes": [".ai/evidence", "graphify-out", ".rpa-ai/local", "bin", "obj", "packages", "outputs", "artifacts"],
+    "reuseRequires": ["schemaVersion match", "normalized path set match", "content hash match or valid metadata cache", "relevant environment evidence match"]
+  },
+  "riskLevels": {
+    "R0": "Trivial or non-behavioral change; never bypasses applicable gates.",
+    "R1": "Low-risk localized configuration, mapping, or internal logic change.",
+    "R2": "Normal behavioral, UI, output, email, dependency, or application-interaction change.",
+    "R3": "High-risk transaction, credential, security, queue, database, external-write, shared-component, or architecture change."
+  },
+  "diagnosticsDecisionPolicy": {
+    "script": ".rpa-ai/scripts/Get-DiagnosticsDecision.ps1",
+    "default": "RUN when classification or change facts are missing, invalid, incomplete, uncertain, or structurally unsafe.",
+    "eligibleRiskLevels": ["R0", "R1"],
+    "skipRequires": [
+      "structural validation PASS",
+      "explicit localizedScope true",
+      "explicit eligible low-risk change kind",
+      "all required safety facts present as booleans",
+      "no project.json/dependency/new/deleted workflow/interface/invoke/UI/security/unresolved/mapper-warning/architecture/uncertainty/ambiguity trigger"
+    ],
+    "eligibleKinds": ["textOnly", "loggingOnly", "nonStructuralPropertyChange", "localizedConfigurationChange"],
+    "r0Restriction": "R0 skipping requires textOnly because runtime logging or configuration behavior is not R0.",
+    "forceRun": ["R2", "R3", "UNKNOWN", "RunDiagnostics", "failed structural validation", "any blocking fact", "missing safety fact"],
+    "evidenceFields": ["riskClassification", "diagnosticsRequired", "diagnosticsExecuted", "diagnosticsDecisionReason", "relevantChangeFacts", "diagnosticsDurationSeconds"]
+  },
+  "handoffContracts": {
+    "preflight": [
+      "PREFLIGHT_STATUS",
+      "MANAGED_CORE_STATUS",
+      "PROJECT_MAP_STATE",
+      "GRAPH_STATE",
+      "PREFLIGHT_SOURCE_FINGERPRINT",
+      "IMPACT_SET"
+    ],
+    "impactSetFields": [
+      "changedCandidates",
+      "directCallers",
+      "directConsumers",
+      "sharedComponents",
+      "interfacesAffected",
+      "configAffected",
+      "dependencyManifestAffected",
+      "tests",
+      "browserTargets",
+      "outputArtifacts",
+      "auditMode",
+      "auditReason",
+      "r1NoAuditEligible"
+    ],
+    "auditPacketFields": [
+      "risk",
+      "requirementMapping",
+      "changedFiles",
+      "directDependenciesReviewed",
+      "impactSetDelta",
+      "interfacesChanged",
+      "dependenciesChanged",
+      "configChanged",
+      "sourceFingerprint",
+      "dependencyFingerprint",
+      "validation",
+      "auditMode",
+      "auditReason",
+      "r1NoAuditEligible",
+      "developerSelfReview",
+      "escalateToAuditor",
+      "remainingLimitations",
+      "deterministicReruns"
+    ]
+  },
+  "freshnessPolicy": {
+    "deterministicEvidenceRequires": [
+      "sourceFingerprint",
+      "capturedAtUtc",
+      "status",
+      "exitCode when a command ran"
+    ],
+    "dependencyFingerprintInputs": [
+      "dependency-relevant manifests",
+      "project compatibility settings",
+      "resolved UiPath CLI version"
+    ],
+    "rerunTriggers": [
+      "missing or malformed evidence",
+      "source or dependency fingerprint mismatch",
+      "source changed after validation",
+      "unexpected files",
+      "configuration or dependency change",
+      "material plan deviation",
+      "inconsistent or suspicious result",
+      "risk-required independent validation"
+    ]
+  },
+  "changeClassification": {
+    "default": "behavioral-change",
+    "generatedScaffoldOnly": {
+      "id": "generated-scaffold-only",
+      "description": "Only trusted template/scaffold files generated by UiPath Studio or the official UiPath CLI are added and they remain unmodified after generation.",
+      "conditions": [
+        "No generated behavior, arguments, dependencies, selectors, project wiring, or executable logic were edited after generation.",
+        "The entire implementation change qualifies; this is not a per-file loophole inside a behavioral change.",
+        "Generation provenance is recorded and verified by the Coordinator/Developer; an Auditor checks it only when audit routing invokes one."
+      ],
+      "technicalGateDisposition": "EXEMPT_GENERATED_SCAFFOLD"
+    },
+    "nonBehavioralR0": {
+      "id": "non-behavioral-r0",
+      "description": "A provably trivial or non-behavioral R0 change that cannot alter runtime behavior, interfaces, dependencies, deployment behavior, external interaction, security, or business logic. See .github/instructions/risk-routing.instructions.md.",
+      "conditions": [
+        "R0_FAST_LANE_ELIGIBLE is explicitly recorded as true in the approved Change Plan with a concise, factual R0_FAST_LANE_REASON.",
+        "No .xaml/coded workflow logic, condition, assignment, behavior-affecting argument/variable, execution-affecting Config value, selector, browser/UI interaction, email behavior, output-generation behavior, dependency/project.json change, application/API/database/queue/Orchestrator interaction, credential, business rule, exception/retry/monitoring-contract logging, test logic, architecture, interface, deployment setting, or managed-core/security instruction changed.",
+        "Risk is determined by impact, not diff size; uncertainty defaults to R0_FAST_LANE_ELIGIBLE: false and the normal workflow.",
+        "Any Developer- or Auditor-discovered runtime impact immediately invalidates this classification (R0_FAST_LANE_INVALIDATED: true) and reclassifies the change as behavioral-change at the recommended risk level."
+      ],
+      "technicalGateDisposition": "NOT_APPLICABLE for gates scoped to behavioral-change or a specific capability that is genuinely absent; gates scoped to \"all\" remain mandatory."
+    }
+  },
+  "gateApplicabilityTiers": {
+    "all": "Mandatory for every change regardless of risk level or classification: development-approval, managed-core-integrity, graph-readiness, audit-routing. Independent audit is conditional on AUDIT_MODE.",
+    "behavioral-change": "Applicable only when the change is classified behavioral-change, which includes R1-R3 and any R0 change that fails the Fast Lane eligibility check: project-json, restore, build, predevelopment-dependencies, analyzer, risk-based diagnostics decision, functional-test, documentation-handoff.",
+    "capability-specific": "Applicable only when the specific capability is genuinely present, independent of risk level: browser-ui-target (UI interaction), outlook-capability (email), output-artifact-quality (business output file), project-scaffold (new project), payload-integrity (payload import/upgrade), generated-scaffold-provenance (generated-scaffold-only)."
+  },
+  "r0FastLane": {
+    "authoritativeInstruction": ".github/instructions/risk-routing.instructions.md",
+    "eligibilityFlag": "R0_FAST_LANE_ELIGIBLE",
+    "invalidationFlag": "R0_FAST_LANE_INVALIDATED",
+    "validatedFlag": "R0_FAST_LANE_VALIDATED",
+    "mandatoryBaseline": [
+      "development-approval",
+      "managed-core-integrity",
+      "r0-eligibility-check",
+      "r0-scope-diff-verification",
+      "documentation-handoff (classification only)",
+      "audit-routing"
+    ],
+    "fixedCost": [
+      "graph-readiness (Coordinator-owned preflight and final source-state evidence remain mandatory; successful evidence is reused across handoffs when fingerprints are unchanged)"
+    ],
+    "conditionallySkippable": [
+      "graph-readiness task-level discovery query (Query-BotGraph.ps1 broad relationship lookup) only when every changed file is provably outside executable/project/dependency/graph-relevant structure"
+    ],
+    "notApplicableWhenObjectivelyIrrelevant": [
+      "project-json",
+      "restore",
+      "build",
+      "predevelopment-dependencies",
+      "browser-ui-target",
+      "analyzer",
+      "diagnostics",
+      "functional-test",
+      "output-artifact-quality",
+      "project-scaffold",
+      "payload-integrity"
+    ],
+    "documentationAgent": "Skipped by default for R0; NONE is typical, and HUMAN_DOCS does not require the Documentation Agent when the R0 change directly and completely edits the target document with no cross-document synchronization required."
+  },
+  "r1LightLane": {
+    "authoritativeInstruction": ".github/instructions/risk-routing.instructions.md",
+    "eligibilityFlag": "R1_LIGHT_LANE_ELIGIBLE",
+    "invalidationFlag": "R1_LIGHT_LANE_INVALIDATED",
+    "validatedFlag": "R1_LIGHT_LANE_VALID",
+    "description": "R1 is behavioral. The Light Lane narrows discovery and regression scope; it never marks an applicable behavioral-change gate NOT_APPLICABLE the way R0 does.",
+    "mandatoryBaseline": [
+      "development-approval",
+      "managed-core-integrity",
+      "graph-readiness",
+      "r1-eligibility-check",
+      "r1-scope-diff-verification",
+      "documentation-handoff",
+      "audit-routing",
+      "developer-self-review when AUDIT_MODE is NONE for behavioral R1"
+    ],
+    "requiredWhenGenuinelyApplicable": [
+      "project-json",
+      "restore",
+      "build",
+      "predevelopment-dependencies",
+      "browser-ui-target",
+      "analyzer",
+      "diagnostics",
+      "functional-test",
+      "outlook-capability",
+      "output-artifact-quality"
+    ],
+    "fixedCost": [
+      "graph-readiness (Coordinator-owned preflight and final source-state evidence remain mandatory; successful evidence is reused across handoffs when fingerprints are unchanged)"
+    ],
+    "narrowedNotSkipped": [
+      "graph-readiness task-level discovery query (Query-BotGraph.ps1) may reuse the already-approved narrow Impact Set instead of a broad relationship lookup",
+      "regression scope limited to the changed component, its direct caller/consumer, and the directly affected test unless evidence indicates wider impact",
+      "no multi-workflow or repository-wide architecture re-discovery when the targeted plan already narrows the Impact Set"
+    ],
+    "neverSkippable": [
+      "build when executable logic changed",
+      "targeted test when a relevant test exists",
+      "independent Auditor review when AUDIT_MODE is LIGHT or FULL",
+      "any capability-specific gate that is genuinely present (UI, output, Outlook, dependency)"
+    ],
+    "documentationAgent": "Same NONE/CONTEXT_ONLY/HUMAN_DOCS routing as every other risk level; not skipped by default the way it is for R0."
+  },
+  "auditRouting": {
+    "allowedModes": [
+      "NONE",
+      "LIGHT",
+      "FULL"
+    ],
+    "defaultByRisk": {
+      "R0": "NONE",
+      "R1": "NONE when r1NoAuditEligible is true, otherwise LIGHT",
+      "R2": "LIGHT or FULL",
+      "R3": "FULL"
+    },
+    "r2R3CannotUseNone": true,
+    "noneRequires": [
+      "R0 non-behavioral classification, or R1_NO_AUDIT_ELIGIBLE=true",
+      "Developer deterministic validation complete and current",
+      "Developer self-review PASS when AUDIT_MODE is NONE for behavioral R1",
+      "ESCALATE_TO_AUDITOR=false"
+    ],
+    "r1NoAuditEligibility": [
+      "no project.json change",
+      "no dependency change",
+      "no shared workflow/component change",
+      "no public workflow argument/interface change",
+      "no Config semantics change",
+      "no REFramework state-machine architecture change",
+      "no retry behavior change",
+      "no transaction semantics change",
+      "no BusinessRuleException/SystemException semantics change",
+      "no queue behavior change",
+      "no database write behavior change",
+      "no external-system write that introduces material risk",
+      "no credential/security-sensitive change",
+      "no Production configuration or environment change",
+      "no managed Dev Kit core modification outside approved scope",
+      "no unexpected changed files",
+      "all modified files are inside the approved Impact Set",
+      "direct callers/consumers are known and unchanged where required",
+      "Developer validation evidence is complete and current",
+      "no unresolved assumptions",
+      "no validation warnings requiring engineering judgment"
+    ],
+    "mandatoryAuditTriggers": [
+      "project.json changed",
+      "dependency changed",
+      "shared component changed",
+      "workflow argument/interface changed",
+      "Config semantics changed",
+      "REFramework architecture changed",
+      "retry behavior changed",
+      "transaction semantics changed",
+      "exception classification changed",
+      "queue behavior changed",
+      "database or material external-system write changed",
+      "security-sensitive logic changed",
+      "credential handling changed",
+      "Production configuration/environment touched",
+      "unexpected file changed or file outside approved Impact Set",
+      "build failed",
+      "required targeted test failed",
+      "required test could not be performed and remaining risk is material",
+      "validation evidence missing, stale, or inconsistent",
+      "source changed after final validation",
+      "Developer identifies uncertainty",
+      "Coordinator cannot confidently classify the change as low risk"
+    ],
+    "developerSelfReview": [
+      "acceptance criteria satisfied",
+      "only approved Impact Set files changed",
+      "no unexpected workflow argument/interface change",
+      "no unexpected retry, exception, transaction, queue, Config, dependency, security, or Production behavior change",
+      "deterministic results current for final source fingerprint",
+      "required functional/output/UI validation passed",
+      "no remaining uncertainty requiring independent review"
+    ],
+    "lightOutcome": [
+      "PASS",
+      "REWORK",
+      "ESCALATE_TO_FULL_AUDIT",
+      "BLOCKED"
+    ],
+    "fullOutcome": [
+      "PASS",
+      "REWORK",
+      "BLOCKED"
+    ]
+  },
+  "gates": [
+    {
+      "id": "development-approval",
+      "name": "Single user approval before development",
+      "mandatory": true,
+      "appliesTo": "all",
+      "note": "Coordinator presents one recommended solution when the implementation is clear, or up to three materially distinct options only for a genuine architectural trade-off; records the user's selection, then presents one proposed change and obtains one explicit approval before scaffolding, dependency setup, capture, or implementation. Solution selection is not a second approval gate. Routine follow-up confirmations are not required inside the approved scope. For an R0 Fast Lane change, the proposal and approval may be concise per risk-routing.instructions.md, but approval itself remains mandatory."
+    },
+    {
+      "id": "r0-eligibility-check",
+      "name": "R0 Fast Lane eligibility verification",
+      "mandatory": true,
+      "appliesWhen": "Coordinator classifies risk as R0.",
+      "note": "R0 alone is not permission to use the Fast Lane. Require explicit R0_FAST_LANE_ELIGIBLE (true/false) with a factual R0_FAST_LANE_REASON per risk-routing.instructions.md before a concise plan replaces the normal Change Plan. Default to false and use the normal workflow when uncertain."
+    },
+    {
+      "id": "r0-scope-diff-verification",
+      "name": "R0 Fast Lane changed-file/diff and production-safety verification",
+      "mandatory": true,
+      "appliesTo": "non-behavioral-r0",
+      "note": "The Developer verifies only approved files changed, the diff is consistent with the non-behavioral requirement, and no runtime, dependency, interface, security, or Production-relevant path was touched. When AUDIT_MODE is LIGHT or FULL, the Auditor independently verifies the scope and classification. Any such finding sets R0_FAST_LANE_INVALIDATED=true and returns the change to the normal workflow at the recommended risk level."
+    },
+    {
+      "id": "r1-eligibility-check",
+      "name": "R1 Light Lane eligibility verification",
+      "mandatory": true,
+      "appliesWhen": "Coordinator classifies risk as R1.",
+      "note": "R1 alone is not permission to use the Light Lane. Require explicit R1_LIGHT_LANE_ELIGIBLE (true/false) with a factual R1_LIGHT_LANE_REASON per risk-routing.instructions.md before a targeted plan replaces the full Change Plan. Default to false and use normal R2-style depth when uncertain."
+    },
+    {
+      "id": "r1-scope-diff-verification",
+      "name": "R1 Light Lane immediate-impact verification",
+      "mandatory": true,
+      "appliesWhen": "Coordinator classifies risk as R1 and the Light Lane is used.",
+      "note": "The Developer verifies the change is localized to the approved direct component and its immediate dependencies, that applicable build/test/analyzer/UI/output gates ran when relevant, and that no shared workflow, dependency, external interface, or architecture impact was discovered. When AUDIT_MODE is LIGHT or FULL, the Auditor independently verifies the actual diff, approved Impact Set, unexpected-change detection, and risk classification. Any such finding sets R1_LIGHT_LANE_INVALIDATED=true (Developer) or R1_LIGHT_LANE_VALID=false (Auditor) and returns the change to R2 or R3."
+    },
+    {
+      "id": "managed-core-integrity",
+      "name": "Managed Dev Kit core integrity",
+      "command": ".rpa-ai/scripts/Test-ManagedFileIntegrity.ps1",
+      "mandatory": true,
+      "appliesTo": "all",
+      "note": "Coordinator runs the initial check and records state. Reuse trustworthy evidence across handoffs; rerun only when managed state, repository state, freshness, suspicion, or evidence reliability requires it. Record final current integrity evidence before audit. Bot changes must not modify paths marked managed in .rpa-ai/kit-manifest.json."
+    },
+    {
+      "id": "graph-readiness",
+      "name": "Bot-local Graphify readiness and freshness",
+      "command": ".rpa-ai/scripts/Refresh-BotGraph.ps1 -Mode Update",
+      "mandatory": true,
+      "appliesTo": "all",
+      "note": "Graphify must be pinned, local-only, and query-logging disabled. Check project.json first; reuse or validate the cache for existing bots, defer new-bot graph discovery until stable finalization, refresh once after final source changes when the executable source or graph configuration fingerprint differs, and associate the final graph with both fingerprints. Auditor PASS alone never requires another refresh."
+    },
+    {
+      "id": "payload-integrity",
+      "name": "RPA AI Dev Kit payload integrity",
+      "mandatory": true,
+      "appliesWhen": "A bot repository is initialized from or upgraded with a Dev Kit payload.",
+      "note": "Verify .rpa-ai/kit-manifest.json, managed-file hashes, preserve-only bot files, and conflict handling."
+    },
+    {
+      "id": "project-scaffold",
+      "name": "Official UiPath project scaffold",
+      "mandatory": true,
+      "appliesWhen": "project.json was absent when the task began.",
+      "note": "Require official UiPath CLI provenance, approved project/template choices, explicit target framework and expression language, structural verification, collision-free transfer, and preserved intake files."
+    },
+    {
+      "id": "project-json",
+      "name": "UiPath project.json exists and parses",
+      "mandatory": true,
+      "appliesTo": "behavioral-change"
+    },
+    {
+      "id": "xaml-sanity",
+      "name": "Cheap XAML/XML sanity",
+      "command": "Validate-RpaProject.ps1 XAML/XML sanity gate",
+      "mandatory": true,
+      "appliesTo": "behavioral-change",
+      "note": "Parse project XAML/XML before dependency restore or build. A failure stops validation and is repaired with the exact deterministic error."
+    },
+    {
+      "id": "restore",
+      "name": "UiPath dependencies restore",
+      "command": "uip rpa restore <project>",
+      "mandatory": true,
+      "appliesTo": "behavioral-change"
+    },
+    {
+      "id": "build",
+      "name": "UiPath build/compile",
+      "command": "uip rpa build <project>",
+      "mandatory": true,
+      "appliesTo": "behavioral-change"
+    },
+    {
+      "id": "predevelopment-dependencies",
+      "name": "Pre-development dependency setup",
+      "mandatory": true,
+      "appliesTo": "behavioral-change",
+      "note": "HARD PRE-AUTHORING GATE: derive required process dependencies, restore declared UiPath packages, install genuinely missing project dependencies with supported tooling, verify machine/runtime prerequisites, and set DEPENDENCY_SETUP_COMPLETE before browser capture or executable authoring. Dependency additions remain part of the behavioral diff and still require normal validation/audit.",
+      "phase": "pre-authoring",
+      "requiredEvidence": [
+        "DEPENDENCY_SETUP_REQUIRED=true",
+        "dependency inventory mapped to required capabilities",
+        "restore/install actions and results",
+        "dependency/prerequisite resolution verified",
+        "DEPENDENCY_SETUP_COMPLETE=true"
+      ]
+    },
+    {
+      "id": "browser-ui-target",
+      "name": "Pre-authoring browser UI capture gate",
+      "mandatory": true,
+      "appliesWhen": "A browser UI interaction is added or changed in a behavioral change.",
+      "note": "HARD PRE-AUTHORING GATE: Developer must set UI_CAPTURE_REQUIRED, proactively open/attach to the Development browser, capture and safely prove every required target, then set UI_CAPTURE_COMPLETE before authoring the UI behavior. For UiPath implementations, UiPath UI Automation/Object Repository capture is required; Python-only DOM inspection is insufficient.",
+      "phase": "pre-authoring",
+      "requiredEvidence": [
+        "UI_CAPTURE_REQUIRED=true",
+        "BROWSER_OPENED_OR_ATTACHED=true",
+        "capturedTargets==requiredTargets",
+        "UI_CAPTURE_COMPLETE=true"
+      ]
+    },
+    {
+      "id": "analyzer",
+      "name": "Workflow Analyzer",
+      "mandatory": false,
+      "appliesTo": "behavioral-change",
+      "note": "Enable as mandatory when an approved governance JSON is supplied. Build may also run analyzer depending on configuration. Use the shared command helper and preserve command duration, exit status, timeout, and output evidence."
+    },
+    {
+      "id": "diagnostics",
+      "name": "Studio/project diagnostics",
+      "command": "uip rpa get-errors --project-dir <project> --min-severity error",
+      "mandatory": false,
+      "appliesTo": "behavioral-change",
+      "note": "Run before restore/build when required by diagnosticsDecisionPolicy. Eligible R0/localized R1 may record SKIPPED only from the deterministic decision script; uncertain or higher-risk work runs diagnostics. Associate the result and decision evidence with the shared executable source fingerprint."
+    },
+    {
+      "id": "functional-test",
+      "name": "Relevant Development test or workflow execution",
+      "mandatory": false,
+      "appliesTo": "behavioral-change",
+      "note": "Promote to mandatory per bot once deterministic safe test execution is configured. Browser interaction proof may form part of this evidence but does not replace broader functional testing when that is configured."
+    },
+    {
+      "id": "documentation-handoff",
+      "name": "Targeted documentation handoff and review",
+      "mandatory": true,
+      "appliesTo": "behavioral-change",
+      "note": "Developer confirms DOCUMENTATION_IMPACT as NONE, CONTEXT_ONLY, or HUMAN_DOCS after implementation/testing. Invoke Documentation Agent only for HUMAN_DOCS; update AGENTS.md only when stable agent-facing context changes. When AUDIT_MODE is NONE, Coordinator/Developer evidence confirms the classification and targeted scope. When AUDIT_MODE is LIGHT or FULL, the Auditor independently verifies the classification and scope. Requirement/implementation mismatches are REWORK."
+    },
+    {
+      "id": "outlook-capability",
+      "name": "Machine/user-specific Outlook capability check",
+      "mandatory": true,
+      "appliesWhen": "Email or Outlook behavior is added or changed.",
+      "note": "Run the rerunnable non-destructive capability probe. A false result selects independent email validation and does not by itself fail the change."
+    },
+    {
+      "id": "output-artifact-quality",
+      "name": "Generated output data/readability/formatting QA",
+      "mandatory": true,
+      "appliesWhen": "A behavioral change creates, exports, downloads, transforms, or materially updates a business output artifact.",
+      "note": "File existence is insufficient. Inspect the actual Development-generated artifact. Verify expected schema/content and representative data; apply format-appropriate readability/presentation checks. Excel requires relevant header/width/number-date/ID/clipping/formula-error/template-contract checks. Machine-consumed contracts override cosmetic restyling.",
+      "phase": "post-execution",
+      "requiredEvidence": [
+        "OUTPUT_QA_REQUIRED=true",
+        "actual generated artifact inspected",
+        "data/schema checks passed",
+        "readability/formatting checks passed when applicable",
+        "OUTPUT_QA_COMPLETE=true"
+      ]
+    },
+    {
+      "id": "generated-scaffold-provenance",
+      "name": "Trusted generated-scaffold provenance",
+      "mandatory": true,
+      "appliesTo": "generated-scaffold-only",
+      "note": "Record Studio/official CLI generator, CLI command when applicable, generated file list, and confirmation of no post-generation behavior edits."
+    },
+    {
+      "id": "audit",
+      "name": "Independent RPA Auditor verdict",
+      "mandatory": false,
+      "appliesWhen": "AUDIT_MODE is LIGHT or FULL, or a mandatory audit trigger escalates a NONE route",
+      "note": "Required for R2/R3 and every mandatory trigger. Not invoked for eligible R0 or R1 AUDIT_MODE=NONE after all applicable Developer gates and self-review pass."
+    }
+  ],
+  "completionOutcomes": [
+    "PASS",
+    "REWORK",
+    "BLOCKED"
+  ]
+}
