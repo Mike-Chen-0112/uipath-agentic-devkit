@@ -1,4 +1,4 @@
-# RPA AI Dev Kit v0.12.1
+# RPA AI Dev Kit v0.12.2
 
 Create or change UiPath automations through GitHub Copilot in VS Code. The same setup supports new bots and existing UiPath projects.
 
@@ -10,7 +10,7 @@ Create or change UiPath automations through GitHub Copilot in VS Code. The same 
 
 Minimum requirements: Windows, Windows PowerShell 5.1 or PowerShell 7+, VS Code with GitHub Copilot, and internet access to the official package download sites. Git is optional but recommended.
 
-Administrator access and system `PATH` changes are not required. Setup installs everything else (Node.js/npm, UiPath CLI, UiPath skills, `uv`, and Graphify) in your Windows user profile and restores your project's dependencies; a missing .NET runtime is installed the same way when the compiler first needs it. It retries and repairs common failures on its own; you are not asked to approve any setup step.
+Administrator access and system `PATH` changes are not required. Activation installs required Node.js/npm and UiPath CLI/Skills in the user profile. Optional `uv`/Graphify is installed only with `-EnableGraphify`; a missing .NET runtime is installed when required by the compiler. Setup still repairs recoverable failures.
 
 The check is optional. To run it, open PowerShell in this cloned repository and run:
 
@@ -34,7 +34,7 @@ The bot folder can contain an existing UiPath project, or it can be an empty fol
 
 #### Option B: You have the ZIP file
 
-1. Find `rpa-ai-devkit-bot-0.12.1.zip` in the `artifacts` folder.
+1. Find `rpa-ai-devkit-bot-0.12.2.zip` in the `artifacts` folder.
 2. Extract the ZIP into a temporary folder, not directly into the bot folder.
 3. Open PowerShell in the extracted folder. Run this command and replace `C:\RPA\MyBot` with the folder for your bot:
 
@@ -45,6 +45,24 @@ The bot folder can contain an existing UiPath project, or it can be an empty fol
 ```
 
 Wait for `RPA AI DEV KIT IS READY`. Resolve any reported `FAIL` before continuing.
+
+### v0.12.2 lean scaffolding (optional)
+
+A new bot can omit only the optional Humanizer and Caveman prose Skills (four files), while retaining required runtime, validation, safety checks and rollback:
+
+```powershell
+./scripts/Install-RpaAiDevKit.ps1 -TargetBotPath C:\RPA\MyBot -SlimPayload
+```
+
+Use `./scripts/Export-RpaAiDevKit.ps1 -SlimPayload` for a slim ZIP. Standard payload remains the compatibility default. Existing optional Skills are not deleted automatically on upgrade.
+
+Official project creation provides `-Json` for future router integrations and uses summary telemetry by default; use `-TelemetryLevel Detailed` for per-step scaffold and Requirements events:
+
+```powershell
+& ./.rpa-ai/scripts/New-RpaProject.ps1 -ProjectName InvoiceBot -ProjectType Process -TargetFramework Windows -Json
+```
+
+A failed scaffold still throws, preserves safety gates, and never emits a success JSON object.
 
 ### 3. Make one request
 
@@ -72,7 +90,7 @@ The Coordinator checks for a newer Dev Kit release, presents one solution when t
 
 ### What activation handles
 
-Activation verifies managed files; installs missing portable Node.js/npm, UiPath CLI, `uv`, and Graphify tools in the current user profile (retrying once on failure); installs UiPath Copilot skills; reuses, refreshes, or rebuilds the graph for existing projects; restores existing project dependencies; defers graph extraction for project-less new bots; and runs diagnostics.
+Activation verifies managed files, bootstraps required CLI/Skills, restores existing project dependencies, and runs diagnostics. Graphify is on-demand: `./.rpa-ai/scripts/Activate-RpaAiDevKit.ps1 -EnableGraphify` installs/refreshes a graph when dependency analysis requires it.
 
 ### Optional response and prose skills
 
@@ -83,7 +101,7 @@ The payload includes two on-demand skills:
 
 The Dev Kit does not install Caveman's proxy, hooks, telemetry, or always-on Copilot instruction file. The proxy is a separate component with different licensing and data-storage behavior. Measure provider-billed usage before enabling any runtime compression for a specific environment.
 
-Graphify is mandatory and local-only. Approved downloads may enter the workstation, but bot source, graph data, business content, and generated files must not leave through Graphify or another third-party library.
+Graphify is optional and local-only. Ordinary tasks use the deterministic Project Mapper; approved downloads may enter the workstation, but bot source and business data must not be sent through Graphify or another third-party library.
 
 ### Safety
 
@@ -143,7 +161,7 @@ Required for the standard flow:
 
 Git is optional. Without it, change review uses file snapshots and kit update checks are skipped.
 
-Activation installs missing portable Node.js/npm, official `@uipath/cli`, `uv`, and pinned Graphify packages in the developer's Windows user profile, then restores the project's dependencies. A missing .NET runtime is installed in the user profile when the compiler first needs it. These tools do not need to be on `PATH`.
+Activation installs missing portable Node.js/npm and official `@uipath/cli`; the pinned local-only Graphify package and `uv` are installed only when requested with `-EnableGraphify`. Existing project dependencies are restored normally.
 
 Check the workstation:
 
@@ -166,8 +184,8 @@ From this central repository:
 This produces:
 
 ```text
-artifacts/rpa-ai-devkit-bot-0.12.1/
-artifacts/rpa-ai-devkit-bot-0.12.1.zip
+artifacts/rpa-ai-devkit-bot-0.12.2/
+artifacts/rpa-ai-devkit-bot-0.12.2.zip
 ```
 
 The payload is assembled from [distribution/payload-manifest.json](distribution/payload-manifest.json). `.rpa-ai/kit-manifest.json` inside the payload records the release version, ownership mode, and SHA-256 hash of every source payload file. The generated manifest itself is the root metadata document and does not self-hash.
@@ -188,7 +206,7 @@ Use this path when the bot repository already contains `project.json`.
 ./.rpa-ai/scripts/Activate-RpaAiDevKit.ps1
 ```
 
-Activation discovers or installs the user-scoped UiPath CLI, installs the official UiPath skills locally, verifies managed files, installs/verifies Graphify, reuses or refreshes an existing-project graph, defers project-less new-bot extraction, and runs diagnostics.
+Activation discovers/installs the user-scoped UiPath CLI and Skills, verifies managed files and runs diagnostics. Graphify is opt-in and is not required for ordinary project startup.
 
 ### Checked import
 
@@ -196,7 +214,7 @@ From the central repository:
 
 ```powershell
 ./scripts/Import-RpaAiDevKit.ps1 `
-  -PayloadPath ./artifacts/rpa-ai-devkit-bot-0.12.1 `
+  -PayloadPath ./artifacts/rpa-ai-devkit-bot-0.12.2 `
   -TargetBotPath C:\RPA\MyBot
 ```
 
@@ -207,7 +225,7 @@ The importer:
 - preserves bot-owned intake, context, evidence, and feedback;
 - reports managed-file conflicts instead of silently replacing them;
 - writes the installed payload metadata only after preflight succeeds;
-- verifies or installs the pinned Graphify package locally;
+- verifies or installs the pinned Graphify package locally only when explicitly requested;
 - reuses or refreshes the bot-specific graph for an existing project; project-less new bots record deferred graph extraction until stable finalization.
 
 The existing compatibility command remains available:
@@ -364,9 +382,9 @@ If a managed file was edited locally, import stops and reports a conflict. Revie
 
 Bot-owned intake, context, evidence, feedback, UiPath source, and configuration are never upgrade targets.
 
-## Mandatory local Graphify
+## Optional local Graphify
 
-Graphify is bot-local and cache-first. Existing projects reuse or refresh the graph during planning when the source fingerprint requires it; project-less new bots defer graph extraction until stable finalization. After final source changes, refresh once when the content fingerprint differs. When `AUDIT_MODE` is `LIGHT` or `FULL`, the Auditor consumes that final snapshot; for `AUDIT_MODE: NONE`, the Coordinator/Developer use it for completion. Auditor PASS alone never requires another refresh. Current repository source always wins when the graph disagrees.
+Graphify is bot-local and optional. Project Mapper handles routine planning. Enable Graphify when relevant relationships remain unresolved using `./.rpa-ai/scripts/Activate-RpaAiDevKit.ps1 -EnableGraphify`; when enabled, the graph is cache-first and the current XAML remains authoritative. Audit routes do not require a graph that was never requested.
 
 Graphify processes code/XAML locally. The wrappers force code-only extraction without clustering, disable query logging, and remove known cloud/model credentials from child processes. Intake, context, evidence, documents, Office files, media, and generated business output are excluded.
 
@@ -404,7 +422,7 @@ Do not patch a managed file inside one bot to work around a product limitation. 
 
 ## Release status
 
-v0.12.1 is a controlled Development pilot for existing-bot fixes and greenfield Process/REFramework development. Setup is self-healing and prompt-free, and there is no execution time budget. UI Automation compatibility uses the exact package's declared minimum Studio requirement before release-line matching; unmet minimums still block, including those discovered during restore. Existing pins, risk-based Fast Lane behavior, capture requirements, and final-build delivery gates remain in place. Deterministic repository tests do not replace workstation pilots. Real UiPath CLI creation, native diagnostics/build, VS Code custom-agent discovery, live browser capture, pinned Graphify installation, and representative Development executions must be recorded as passed or `NOT_RUN`; they must never be inferred.
+v0.12.2 is a controlled Development pilot for existing-bot fixes and greenfield Process/REFramework development. Setup is self-healing and prompt-free, and there is no execution time budget. UI Automation compatibility uses the exact package's declared minimum Studio requirement before release-line matching; unmet minimums still block, including those discovered during restore. Existing pins, risk-based Fast Lane behavior, capture requirements, and final-build delivery gates remain in place. Deterministic repository tests do not replace workstation pilots. Real UiPath CLI creation, native diagnostics/build, VS Code custom-agent discovery, live browser capture, pinned Graphify installation, and representative Development executions must be recorded as passed or `NOT_RUN`; they must never be inferred.
 
 <!-- markdownlint-disable MD033 -->
 </details>

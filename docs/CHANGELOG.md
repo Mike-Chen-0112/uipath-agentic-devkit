@@ -2,6 +2,17 @@
 
 ## Unreleased
 
+### v0.12.2 — lean scaffold (review candidate)
+
+- Default scaffolding to `Summary` telemetry with opt-in `-TelemetryLevel Detailed`, retaining aggregate and CLI evidence.
+- Provide `New-RpaProject.ps1 -Json` success schema for a future Python Router while retaining official CLI project generation, collision protection, staged transfer hashes, rollback and Requirements initialization.
+- Support opt-in `-SlimPayload` on export/install (omitting only optional Humanizer/Caveman prose Skills: 4/95 entries); do not remove existing optional files on upgrade.
+- Add mocked regression coverage for JSON output, summary/detailed telemetry and slim/full payloads.
+- Make Graphify opt-in at activation/import; rely on Project Mapper for ordinary tasks and permit graph-free Fast Context.
+- Add ephemeral official OR inventory via `Get-OfficialObjectRepository.ps1` and make Agent guidance official-first; keep legacy Selector Registry for existing inline/Registry targets until a live pilot proves safe migration.
+- Do not replace the Copilot Agent runtime, delete legacy Registry data, or claim live UIA success without a Windows pilot.
+
+
 ### v0.12.1
 
 - Fixed `Read-OfficialHelp` rejecting real leaf usage lines with `OFFICIAL_COMMAND_SYNTAX_UNAVAILABLE`. The 0.12.0 usage check accepted only `[`/`<` after the command path, but the CLI (1.204.0) prints explicit required options first, for example `uip rpa uia target-app resolve-defaults --refs <string> --name <string> [--project-dir <string>] ...`, and braced choices such as `[--type { Default | CV }]`. Usage is now validated as the exact `uip rpa uia <path>` prefix followed only by options, `<placeholders>`, `[groups]`, `{choices}`, or `...`; a bare word (another command) or a different path still fails closed. Options listed outside brackets are recorded as required, must be declared in the help's options, and are enforced before execution (`OFFICIAL_REQUIRED_OPTION_MISSING`, alias-aware). Table help now joins wrapped usage text, accepts bare argument names (`w/b-ref`), wrapped value placeholders followed by description text, and bracketed description continuations.

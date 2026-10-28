@@ -6,6 +6,7 @@ param(
     [switch]$InstallUiPathSkills,
     [switch]$UpdateUiPathSkills,
     [switch]$InstallGraphify,
+    [switch]$SlimPayload,
     [switch]$EnableGraphifyHooks,
     [switch]$Upgrade,
     [switch]$ForceManagedFiles,
@@ -24,7 +25,7 @@ $kitVersion = (Get-Content $kitVersionPath -Raw).Trim()
 
 $temporaryExport = Join-Path $env:TEMP ('rpa-ai-devkit-install-' + [guid]::NewGuid().ToString('N'))
 try {
-    & (Join-Path $kitRoot 'scripts\Export-RpaAiDevKit.ps1') -OutputDirectory $temporaryExport -NoZip
+    & (Join-Path $kitRoot 'scripts\Export-RpaAiDevKit.ps1') -OutputDirectory $temporaryExport -NoZip -SlimPayload:$SlimPayload
     $payload = Get-ChildItem $temporaryExport -Directory | Select-Object -First 1
     if (-not $payload) { throw 'Payload export did not produce a directory.' }
 
@@ -32,7 +33,8 @@ try {
         -PayloadPath $payload.FullName `
         -TargetBotPath $TargetBotPath `
         -Upgrade `
-        -OverwriteManaged:$ForceManagedFiles
+        -OverwriteManaged:$ForceManagedFiles `
+        -EnableGraphify:$InstallGraphify
 }
 finally {
     Remove-Item $temporaryExport -Recurse -Force -ErrorAction SilentlyContinue
@@ -52,9 +54,6 @@ if($RuntimeConfigPath.Count -or $CompilerPath){
 
 if ($Upgrade) {
     Write-Host '[INFO] -Upgrade is retained for command compatibility; unchanged managed files are now upgraded automatically.'
-}
-if ($InstallGraphify) {
-    Write-Host '[INFO] -InstallGraphify is retained for command compatibility; Graphify activation is now mandatory during import.'
 }
 if ($EnableGraphifyHooks) {
     throw "-EnableGraphifyHooks is disabled by the v$kitVersion local-only policy. Graph refreshes run through hardened Dev Kit wrappers."

@@ -5,11 +5,11 @@ description: Use when the requested change includes browser or visible UI intera
 
 These rules apply whenever the requested behavior includes browser UI interaction: open/navigate, click, type, select, hover, submit, upload/download through UI, read/get text/get attribute, extract data, check element/app state, or any other visible-page action.
 
-## Target Registry resolution gate
+## Official Object Repository first; legacy Registry fallback
 
-Resolve each logical target through `.rpa-ai/scripts/Resolve-UiTarget.ps1` before browser exploration or XAML authoring. The project-local `.devkit/ui-targets/registry.json` stores compact target definitions and validation metadata; it never stores credentials, DOM dumps, or inline screenshots. An absent registry is created automatically only when UI targeting is needed, so non-UI bots incur no work.
+Start with `.rpa-ai/scripts/Get-OfficialObjectRepository.ps1 -ApprovedDevelopment -NonSensitiveDevelopmentData -Json` to inspect the current project's official OR without persisting a second store. The OR inventory is not live proof. Use the installed UiPath UIA skill/CLI to validate or capture each target before authoring. Only invoke the legacy `Resolve-UiTarget.ps1` for an existing Registry/inline-selector workflow; do not create a parallel registry for a new target.
 
-Resolution order is capability- and context-aware: validated registry target -> existing Object Repository reference -> strict selector -> DOM selector -> anchor-assisted selector -> fuzzy selector -> semantic DOM -> semantic image/Computer Vision -> image -> coordinate last resort. Native windows omit DOM strategies. `Get-UiTargetCapabilities.ps1` detects the declared UI Automation version and local feature evidence without upgrading packages, and `Get-UiTargetQuality.ps1` scores selectors before reuse.
+Official-first sequence: OR inventory -> live validation of a compatible OR target -> official UIA capture/configuration/improvement for unresolved targets. Legacy projects may use the existing bounded Registry selector hierarchy only as a compatibility fallback. Do not invent selector strings or treat a CLI success code as a live UI proof.
 
 Treat `REUSED` or live-validated `RESOLVED` as target-resolution completion. `VALIDATION_REQUIRED`, `BLOCKED_UI_CAPTURE`, and `UNRESOLVED_TARGET` never authorize UI authoring. A static `PASS` is not live proof. Record the resolver evidence path, reuse result, quality, validation level, application/page context, attempts, fallback reason, and warnings. Referenced screenshots are size-capped and hashed; never copy their bytes into execution state.
 
@@ -17,7 +17,7 @@ Authority is: live validated UI > valid deterministic selector/target > registry
 
 ### Screen-level resolution and capture
 
-Inventory targets by screen state before exploration. Prefer `.rpa-ai/scripts/Resolve-UiTargets.ps1 -TargetsJson <compact array> -Domain <domain> -Page <page> -Json` for all targets on the same screen. Each request contains `targetId`, `logicalName`, optional `expectedRole`, and optional `candidates` captured through official tooling. It uses the same per-target resolver and gates, returns accepted `binding` objects, and preserves unique per-target evidence plus a batch summary. A missing target remains blocked; batching never supplies live proof.
+Inventory targets by screen state before exploration. Prefer one official OR inventory per project/session; use the installed official UiPath UIA skills/CLI to capture and validate unresolved targets. For pre-existing Registry targets only, `Resolve-UiTargets.ps1` can batch legacy compatibility checks. Neither inventory nor batching supplies live target proof.
 
 Attach to the approved Chrome window once per required screen context. Reuse the current UiPath snapshot only while its screen state and references remain valid. Capture and prove all unresolved targets visible in that state before navigating away; do not repeat a full snapshot for each target. Refresh after navigation, modal changes, rerendering, stale references, or another invalidating state change. State-changing actions stay sequential; batching resolution does not authorize parallel clicks.
 
@@ -36,7 +36,7 @@ The moment a requirement contains any browser UI action, set `UI_CAPTURE_REQUIRE
 
 **No workflow/code authoring for that UI step may begin until `UI_CAPTURE_COMPLETE = true`.** Reading the minimum context/config needed to find the Development URL and understand the intended screen is allowed; editing XAML, coded workflows, Object Repository consumer code, or Python implementation logic is not.
 
-Do not wait for the user to remind you to resolve targets. Registry lookup is the automatic first targeting action; opening/attaching to the live Development application follows automatically when the resolver requires live validation or discovery.
+The official OR inventory is the first noninteractive targeting action. Opening/attaching to the live Development UI remains mandatory for target proof, and an absent OR entry does not authorize guessing a selector.
 
 ## Target binding and stale-target recovery
 

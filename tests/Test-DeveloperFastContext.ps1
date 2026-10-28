@@ -159,12 +159,31 @@ try {
     $staleRefresh.sourceFingerprint = '1' * 64
     Write-Json (Join-Path $testRoot 'graphify-out\refresh-state-stale.json') $staleRefresh
     Assert-Fallback (Invoke-Prepare -Name 'stale-graph' -RefreshPath 'graphify-out/refresh-state-stale.json' -ExpectedSource $snapshot.sourceFingerprint) 'GRAPH_FINGERPRINT_MISMATCH' 'Stale graph fingerprint'
+    $mapIgnoresStaleGraph = Invoke-Prepare -Name 'mapper-stale-graph' -RefreshPath 'graphify-out/refresh-state-stale.json' -ExpectedSource $snapshot.sourceFingerprint -Switches @{ ExpectedGraphFingerprint = '' }
+    Assert-True ($mapIgnoresStaleGraph.decision.fastContextUsed -and -not $mapIgnoresStaleGraph.graph.fullGraphSha256) 'Unrequested stale graph blocked Mapper-only task.'
     Assert-Fallback (Invoke-Prepare -Name 'architecture' -ExpectedSource $snapshot.sourceFingerprint -Switches @{ ArchitectureChange = $true }) 'ARCHITECTURE_CHANGE' 'Architecture change'
     Assert-Fallback (Invoke-Prepare -Name 'interface' -ExpectedSource $snapshot.sourceFingerprint -Switches @{ ArgumentInterfaceChange = $true }) 'ARGUMENT_INTERFACE_CHANGE' 'Argument/interface change'
     Assert-Fallback (Invoke-Prepare -Name 'ambiguous' -ExpectedSource $snapshot.sourceFingerprint -Switches @{ AmbiguousScope = $true }) 'AMBIGUOUS_SCOPE' 'Ambiguous scope'
     Assert-Fallback (Invoke-Prepare -Name 'uncertain' -ExpectedSource $snapshot.sourceFingerprint -Switches @{ DeveloperUncertainty = $true }) 'DEVELOPER_UNCERTAINTY' 'Developer uncertainty'
     Assert-Fallback (Invoke-Prepare -Name 'missing-activity' -ExpectedSource $snapshot.sourceFingerprint -Activity @('MissingActivity')) 'MISSING_RELEVANT_ACTIVITY_LOCATION' 'Missing activity location'
     Assert-Fallback (Invoke-Prepare -Name 'full-source' -ExpectedSource $snapshot.sourceFingerprint -Switches @{ ExplicitFullSourceRequirement = $true }) 'EXPLICIT_FULL_SOURCE_REQUIREMENT' 'Explicit full-source requirement'
+
+    # Localized R1 should remain eligible with no optional Graphify artifacts.
+    Move-Item (Join-Path $testRoot 'graphify-out\graph.json') (Join-Path $testRoot 'graphify-out\graph.json.off')
+    Move-Item (Join-Path $testRoot 'graphify-out\refresh-state.json') (Join-Path $testRoot 'graphify-out\refresh-state.json.off')
+    try {
+        $mapOnly = Invoke-Prepare -Name 'mapper-only' -ExpectedSource $snapshot.sourceFingerprint -Switches @{ ExpectedGraphFingerprint = '' }
+        Assert-True ($mapOnly.decision.fastContextUsed -and -not $mapOnly.graph.fullGraphSha256) 'Mapper-only Fast Context was blocked by missing optional Graphify.'
+        $mapOnlyValid = & $packageScript -Action Validate -ProjectPath $testRoot -PackagePath '.ai/evidence/mapper-only.json' -Json | ConvertFrom-Json
+        Assert-True ($mapOnlyValid.decision.fastContextUsed) 'Mapper-only package validation required a missing graph.'
+        Write-Utf8 (Join-Path $testRoot 'graphify-out\graph.json') '{malformed unrequested graph'
+        $mapWithMalformedUnrequestedGraph = Invoke-Prepare -Name 'mapper-bad-unrequested-graph' -ExpectedSource $snapshot.sourceFingerprint -Switches @{ ExpectedGraphFingerprint = '' }
+        Assert-True ($mapWithMalformedUnrequestedGraph.decision.fastContextUsed) 'Malformed unrequested graph was parsed by Mapper-only path.'
+        Remove-Item (Join-Path $testRoot 'graphify-out\graph.json') -Force
+    } finally {
+        Move-Item (Join-Path $testRoot 'graphify-out\graph.json.off') (Join-Path $testRoot 'graphify-out\graph.json')
+        Move-Item (Join-Path $testRoot 'graphify-out\refresh-state.json.off') (Join-Path $testRoot 'graphify-out\refresh-state.json')
+    }
 
     $stalePackage = Invoke-Prepare -Name 'source-authority' -ExpectedSource $snapshot.sourceFingerprint
     Write-Utf8 (Join-Path $testRoot 'Selected.xaml') ((Get-Content -Raw (Join-Path $testRoot 'Selected.xaml')) + [Environment]::NewLine + '<!-- changed after package -->')

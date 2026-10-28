@@ -114,6 +114,10 @@ if ($line -eq 'rpa|templates|search|--help') {
 if ($line -eq 'rpa|search-templates|--help') {
     if ($family -eq 'fallback') { exit 0 } else { exit 2 }
 }
+if ($Arguments.Count -ge 2 -and $Arguments[0] -eq 'rpa' -and $Arguments[1] -eq 'get-object-repository') {
+    [ordered]@{ applications = @([ordered]@{ name = 'DevelopmentFixtureApp'; screens = @() }) } | ConvertTo-Json -Depth 8
+    exit 0
+}
 if ($line -in @('skills|install|--agent|copilot|--local','skills|update|--agent|copilot|--local')) {
     exit 0
 }
@@ -353,6 +357,14 @@ exit 0
     $zip = Get-ChildItem $exportRoot -Filter '*.zip' | Select-Object -First 1
     Assert-True ($null -ne $payload) 'Payload directory was not created.'
     Assert-True ($null -ne $zip) 'Payload ZIP was not created.'
+    $slimExportRoot = Join-Path $testRoot 'slim-export'
+    & (Join-Path $root 'scripts\Export-RpaAiDevKit.ps1') -OutputDirectory $slimExportRoot -NoZip -SlimPayload
+    $slimPayload = Get-ChildItem $slimExportRoot -Directory | Select-Object -First 1
+    $fullPayloadManifest = Get-Content (Join-Path $payload.FullName '.rpa-ai\kit-manifest.json') -Raw | ConvertFrom-Json
+    $slimPayloadManifest = Get-Content (Join-Path $slimPayload.FullName '.rpa-ai\kit-manifest.json') -Raw | ConvertFrom-Json
+    Assert-True ((@($fullPayloadManifest.files).Count - @($slimPayloadManifest.files).Count) -eq 4) 'Slim payload must omit only four optional prose-skill files.'
+    Assert-True (-not (Test-Path (Join-Path $slimPayload.FullName '.github\skills\humanizer\SKILL.md')) -and -not (Test-Path (Join-Path $slimPayload.FullName '.github\skills\caveman\SKILL.md'))) 'Slim payload still contains optional prose skills.'
+    Assert-True (Test-Path (Join-Path $slimPayload.FullName '.rpa-ai\scripts\Validate-RpaProject.ps1')) 'Slim payload omitted required validation logic.'
     $validationScriptText = Get-Content (Join-Path $root 'scripts\Validate-RpaProject.ps1') -Raw
     Assert-True ($validationScriptText -match 'ValidationSummaryPath' -and $validationScriptText -match 'ReuseDependencyState' -and $validationScriptText -match 'ForceDependencyRestore' -and $validationScriptText -match 'ReuseManagedIntegrity' -and $validationScriptText -match 'dependency_restore' -and $validationScriptText -match 'xaml_sanity' -and $validationScriptText -match "status = 'REUSED'") 'Structured validation summary, fail-fast sanity, or dependency-state reuse is missing.'
     $nativeValidationScriptText = Get-Content (Join-Path $root 'scripts\Invoke-UiPathNativeDiagnostics.ps1') -Raw
@@ -360,6 +372,7 @@ exit 0
     Assert-True ($validationScriptText -match 'RiskClassification' -and $validationScriptText -match 'diagnostics_decision' -and $validationScriptText -match 'diagnosticsDecisionReason' -and $validationScriptText -match 'unexplainedResidual') 'Risk-based diagnostics evidence or detailed validation timing is missing.'
     Assert-True ($validationScriptText -match 'uipVersionResult' -and $validationScriptText -match 'UiPath CLI version check ended' -and $validationScriptText -match 'StageEnd.*Stage validation') 'Validation CLI-probe cleanup coverage is missing.'
     $activationScriptText = Get-Content (Join-Path $root 'scripts\Activate-RpaAiDevKit.ps1') -Raw
+    Assert-True ($activationScriptText -match 'if \(\$EnableGraphify\)' -and $activationScriptText -match 'IncludeGraphify:\$EnableGraphify' -and $activationScriptText -match 'CheckGraphify:\$EnableGraphify') 'Graphify installation or diagnostics are not opt-in.'
     Assert-True ($activationScriptText -match 'project\.json' -and $activationScriptText -match 'Graphify extraction deferred') 'New-bot activation does not defer Graphify extraction.'
     $executionStateText = Get-Content (Join-Path $root 'scripts\ExecutionState.ps1') -Raw
     Assert-True ($executionStateText -match 'started_at' -and $executionStateText -match 'elapsed_seconds' -and $executionStateText -notmatch 'hard_limit_seconds\s*=' -and $executionStateText -notmatch 'BUDGET_BLOCKED' -and $executionStateText -match 'max_repair_loops = 3' -and $executionStateText -match 'REPAIR_LOOP_LIMIT_REACHED' -and $executionStateText -match 'bottleneck') 'Execution timing without a time budget, or the three-loop repair limit, is missing.'
@@ -390,6 +403,7 @@ exit 0
         Assert-True (Test-Path (Join-Path $payload.FullName ".rpa-ai\scripts\$v116Helper")) "v0.11.7 runtime helper is missing from payload: $v116Helper"
     }
     Assert-True (Test-Path (Join-Path $payload.FullName '.rpa-ai\validation\uipath-serialization-policy.json')) 'UiPath serialization policy is missing from payload.'
+    Assert-True (Test-Path (Join-Path $payload.FullName '.rpa-ai\scripts\Get-OfficialObjectRepository.ps1')) 'Official OR CLI inventory helper is missing.'
     Assert-True (Test-Path (Join-Path $payload.FullName '.rpa-ai\scripts\UiTargeting.psm1')) 'UI targeting runtime module is missing from payload.'
     Assert-True (Test-Path (Join-Path $payload.FullName '.rpa-ai\scripts\Get-UiTargetCapabilities.ps1')) 'UI target capability helper is missing from payload.'
     Assert-True (Test-Path (Join-Path $payload.FullName '.rpa-ai\scripts\Get-UiTargetQuality.ps1')) 'UI target quality helper is missing from payload.'
@@ -1227,10 +1241,15 @@ exit 0
     } | ConvertTo-Json | Set-Content (Join-Path $processToolStateDirectory 'tool-paths.json') -Encoding UTF8
     & (Join-Path $root 'scripts\ExecutionState.ps1') -Action Start -TaskType new_bot -TargetBotPath $processBot -Json | Out-Null
     & (Join-Path $root 'scripts\ExecutionState.ps1') -Action StageEnd -Stage coordinator -TargetBotPath $processBot -Json | Out-Null
-    & (Join-Path $root 'scripts\New-RpaProject.ps1') -ProjectName 'InvoiceBot' -ProjectType Process -TargetFramework Portable -TargetBotPath $processBot
+    & (Join-Path $root 'scripts\New-RpaProject.ps1') -ProjectName 'InvoiceBot' -ProjectType Process -TargetFramework Portable -TargetBotPath $processBot -TelemetryLevel Detailed
     $processProject = Get-Content (Join-Path $processBot 'project.json') -Raw | ConvertFrom-Json
     Assert-True ($processProject.targetFramework -eq 'Portable') 'Portable target framework was not passed to current CLI.'
     Assert-True ($processProject.expressionLanguage -eq 'VisualBasic') 'Visual Basic default was not passed to current CLI.'
+    $officialOr = & (Join-Path $root 'scripts\Get-OfficialObjectRepository.ps1') -TargetBotPath $processBot -ApprovedDevelopment -NonSensitiveDevelopmentData -Json | ConvertFrom-Json
+    Assert-True ($officialOr.status -eq 'INVENTORY_UNVERIFIED' -and -not $officialOr.captureCompletionAuthority -and $officialOr.repository.applications[0].name -eq 'DevelopmentFixtureApp') 'Official OR inventory claimed live proof or lost CLI data.'
+    $orApprovalBlocked = $false
+    try { & (Join-Path $root 'scripts\Get-OfficialObjectRepository.ps1') -TargetBotPath $processBot -Json | Out-Null } catch { $orApprovalBlocked = $_.Exception.Message -match 'APPROVED_NON_SENSITIVE_DEVELOPMENT_CONTEXT_REQUIRED' }
+    Assert-True $orApprovalBlocked 'Official OR inventory ran without Development approval.'
     $processEvidence = Get-Content (Join-Path $processBot '.ai\evidence\project-scaffold.json') -Raw | ConvertFrom-Json
     Assert-True ($processEvidence.commandFamily -eq 'uip rpa init') 'Current CLI command family was not recorded.'
     Assert-True ($processEvidence.transferHashVerification -eq 'PASS') 'Transferred Process scaffold hashes were not verified.'
@@ -1245,6 +1264,20 @@ exit 0
     foreach ($requiredScaffoldOperation in @('scaffolding.total','scaffolding.template_resolution','scaffolding.directory_creation','scaffolding.blank_template_creation','scaffolding.project_json_creation','scaffolding.main_xaml_initialization','scaffolding.standard_folder_initialization','scaffolding.devkit_activation','scaffolding.transfer','scaffolding.initial_evidence_setup','requirements.folder.check','requirements.folder.create','requirements.template.check','requirements.template.create','requirements.inventory')) {
         Assert-True ($scaffoldOperations -contains $requiredScaffoldOperation) "Scaffolding telemetry is missing '$requiredScaffoldOperation'."
     }
+
+    $summaryBot = Join-Path $testRoot 'new-process-summary'
+    New-Item -ItemType Directory -Force -Path $summaryBot | Out-Null
+    & (Join-Path $root 'scripts\ExecutionState.ps1') -Action Start -TaskType new_bot -TargetBotPath $summaryBot -Json | Out-Null
+    & (Join-Path $root 'scripts\ExecutionState.ps1') -Action StageEnd -Stage coordinator -TargetBotPath $summaryBot -Json | Out-Null
+    $summaryResult = & (Join-Path $root 'scripts\New-RpaProject.ps1') -ProjectName 'SummaryBot' -ProjectType Process -TargetFramework Windows -TargetBotPath $summaryBot -Json | ConvertFrom-Json
+    Assert-True ($summaryResult.status -eq 'PASS' -and $summaryResult.schemaVersion -eq 1 -and $summaryResult.telemetryLevel -eq 'Summary' -and $summaryResult.projectName -eq 'SummaryBot') 'Summary scaffold did not return a stable JSON result.'
+    Assert-True ($summaryResult.commandFamily -eq 'uip rpa init' -and $summaryResult.generatedFileCount -gt 0 -and $summaryResult.cliExitCode -eq 0) 'Summary scaffold JSON omitted official provenance.'
+    Assert-True ((Test-Path $summaryResult.evidencePath -PathType Leaf) -and (Test-Path $summaryResult.requirementsPath -PathType Leaf)) 'Summary scaffold lost required artifacts.'
+    $summaryLedger = Read-DeveloperEventLedger -LedgerPath (Join-Path $summaryBot '.ai\evidence\developer-events.jsonl')
+    $summaryOperations = @($summaryLedger.events.operation)
+    Assert-True ($summaryOperations -contains 'scaffolding.total') 'Summary mode lost aggregate scaffolding telemetry.'
+    Assert-True ($summaryOperations -notcontains 'scaffolding.directory_creation' -and $summaryOperations -notcontains 'requirements.folder.check') 'Summary mode emitted detailed-only telemetry.'
+    Assert-True (-not @($summaryLedger.errors).Count -and -not @($summaryLedger.events | Where-Object { $_.status -eq 'INCOMPLETE' }).Count) 'Summary scaffolding telemetry contains unfinished events.'
 
     if ($Full) {
     $env:FAKE_UIP_FAMILY = 'fallback'

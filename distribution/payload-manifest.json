@@ -198,6 +198,11 @@
       "ownership": "managed"
     },
     {
+      "source": "scripts/Get-OfficialObjectRepository.ps1",
+      "destination": ".rpa-ai/scripts/Get-OfficialObjectRepository.ps1",
+      "ownership": "managed"
+    },
+    {
       "source": "scripts/UiTargeting.psm1",
       "destination": ".rpa-ai/scripts/UiTargeting.psm1",
       "ownership": "managed"

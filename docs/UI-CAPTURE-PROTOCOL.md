@@ -24,7 +24,7 @@ UI_CAPTURE_REQUIRED = true
 Resolve Development entry point
         |
         v
-LOOK UP .devkit/ui-targets/registry.json
+READ official Object Repository via read-only CLI inventory
         |
         v
 Validate/reuse compatible target? ---- yes ----> record compact reuse evidence
@@ -56,9 +56,9 @@ Validate / debug / recover selectors if needed
 
 ## Hard rule
 
-No UI activity/selector authoring is allowed between `UI_CAPTURE_REQUIRED = true` and `UI_CAPTURE_COMPLETE = true`. Run `Resolve-UiTarget.ps1` first, or use `Resolve-UiTargets.ps1` for one screen's inventory. Only a compatible `REUSED` target or newly live-validated `RESOLVED` target satisfies the per-target gate; static analysis alone does not. `VALIDATION_REQUIRED`, `BLOCKED_UI_CAPTURE`, and `UNRESOLVED_TARGET` do not authorize authoring.
+No UI authoring is permitted between `UI_CAPTURE_REQUIRED = true` and `UI_CAPTURE_COMPLETE = true`. Start with the official OR CLI inventory (`Get-OfficialObjectRepository.ps1`), then follow official UIA skills/CLI to obtain live target proof. OR inventory alone never authorizes UI authoring. For legacy Registry/inline targets, retain the existing `Resolve-UiTarget.ps1` and `Resolve-UiTargets.ps1` validation gates.
 
-## Local Target Registry
+## Official-first Object Repository and legacy Registry
 
 `.devkit/ui-targets/registry.json` is created on demand. Entries contain stable IDs, normalized web/native context, strategy and descriptor or Object Repository reference, anchors/fallbacks, deterministic quality, live/static validation distinction, capability fingerprint, source locations, warnings, and hashes. Screenshots are optional size-capped references, never inline state data.
 
@@ -74,7 +74,7 @@ A captured target can still fail at runtime if the workflow uses it badly. When 
 
 Capability analysis is cached within the PowerShell process for each project. The cache checks UI Automation dependency presence/version, hashes of selected local documentation contents, and Object Repository existence. Changed inputs invalidate the cache. Cached capability facts are not live target proof.
 
-Default web hierarchy: registry -> Object Repository -> strict selector -> DOM selector -> anchor -> fuzzy -> semantic DOM -> semantic image/CV -> image -> coordinates. Native dialogs omit DOM strategies. Coordinates remain non-reusable last-resort evidence.
+Default targeting route: official OR inventory -> official live validation -> official UIA capture/improve when needed. The old Registry strategy ladder remains available for existing legacy target definitions only; native dialogs require native capture and are not DOM targets.
 
 ## UiPath vs Python
 
@@ -84,7 +84,7 @@ For a deliberately Python-based browser implementation, capture/prove the real D
 
 ### Official UI automation adapter
 
-`scripts/Invoke-UiPathUiAutomation.ps1` in the central DevKit is a thin transport adapter, not a capture or selector-proof authority. It resolves the official tool through `Resolve-DevKitTool.ps1` and records command execution through `Invoke-DevKitCommand.ps1`. Use the installed official skill, the project-specific package guide, and current command help for supported operations and arguments; do not turn skill names into guessed CLI commands.
+`scripts/Get-OfficialObjectRepository.ps1` provides read-only, ephemeral official OR inventory under Development/non-sensitive gates and never provides live proof. It excludes referenced UI Libraries. `scripts/Invoke-UiPathUiAutomation.ps1` in the central DevKit is a thin transport adapter, not a capture or selector-proof authority; current official Skill and CLI Help remain authoritative.
 
 Non-help execution requires an approved Development project, non-sensitive Development data, explicit side-effect approval, a resolvable UI Automation dependency meeting the installed skill's prerequisite, and the project-specific `.local/docs/packages/UiPath.UIAutomation.Activities/ui-automation-guide.md`. Missing prerequisites block execution; the adapter does not upgrade packages automatically.
 

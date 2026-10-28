@@ -4,6 +4,7 @@ param(
     [ValidateSet('Auto','Uv','Pipx')]
     [string]$Installer = 'Auto',
     [switch]$ForceGraphifyReinstall,
+    [switch]$EnableGraphify,
     [string[]]$RuntimeConfigPath = @(),
     [string]$CompilerPath,
     [ValidateSet('x64','x86','arm64')]
@@ -33,7 +34,7 @@ foreach ($requiredScript in @($integrityScript,$resolverScript,$prerequisiteScri
 if (-not (Get-Command git -ErrorAction SilentlyContinue)) {
     Write-Host '[WARN] Git not found. The kit still works; change review falls back to file snapshots and update checks are skipped.'
 }
-& $prerequisiteScript -TargetBotPath $TargetBotPath
+& $prerequisiteScript -TargetBotPath $TargetBotPath -IncludeGraphify:$EnableGraphify
 . $resolverScript
 $uipCommand = Resolve-DevKitTool -Name uip -TargetBotPath $TargetBotPath
 $uipReady = $false
@@ -73,11 +74,15 @@ if($RuntimeConfigPath.Count){
     Write-Host '[INFO] Compiler runtime is verified on first restore/build; a missing .NET runtime is installed automatically for this user.'
 }
 & $skillsScript -TargetBotPath $TargetBotPath -Scope Local
-try {
-    & $installScript -TargetBotPath $TargetBotPath -Installer $Installer -ForceReinstall:$ForceGraphifyReinstall
-} catch {
-    Write-Host "[INFO] Graphify installation failed ($($_.Exception.Message)); retrying with a clean reinstall."
-    & $installScript -TargetBotPath $TargetBotPath -Installer $Installer -ForceReinstall
+if ($EnableGraphify) {
+    try {
+        & $installScript -TargetBotPath $TargetBotPath -Installer $Installer -ForceReinstall:$ForceGraphifyReinstall
+    } catch {
+        Write-Host "[INFO] Graphify installation failed ($($_.Exception.Message)); retrying with a clean reinstall."
+        & $installScript -TargetBotPath $TargetBotPath -Installer $Installer -ForceReinstall
+    }
+} else {
+    Write-Host '[INFO] Graphify is on-demand; skipping its installation and graph extraction.'
 }
 
 $graphPath = Join-Path $TargetBotPath 'graphify-out\graph.json'
@@ -85,7 +90,7 @@ function Test-BotGraph {
     if (-not (Test-Path $graphPath -PathType Leaf) -or (Get-Item $graphPath).Length -eq 0) { return $false }
     try { Get-Content $graphPath -Raw | ConvertFrom-Json | Out-Null; return $true } catch { return $false }
 }
-if (Test-Path (Join-Path $TargetBotPath 'project.json') -PathType Leaf) {
+if ($EnableGraphify -and (Test-Path (Join-Path $TargetBotPath 'project.json') -PathType Leaf)) {
     $graphError = $null
     try { & $refreshScript -TargetBotPath $TargetBotPath -Mode Update } catch { $graphError = $_.Exception.Message }
     if ($graphError -or -not (Test-BotGraph)) {
@@ -93,6 +98,8 @@ if (Test-Path (Join-Path $TargetBotPath 'project.json') -PathType Leaf) {
         & $refreshScript -TargetBotPath $TargetBotPath -Mode Update -Force
         if (-not (Test-BotGraph)) { throw "Graphify activation did not create a valid non-empty bot graph: $graphPath" }
     }
+}
+if (Test-Path (Join-Path $TargetBotPath 'project.json') -PathType Leaf) {
     if (-not $SkipDependencyRestore) {
         Write-Host '[INFO] Restoring UiPath project dependencies.'
         # The CLI writes warnings to stderr; do not let them become terminating errors under 'Stop'.
@@ -113,10 +120,10 @@ if (Test-Path (Join-Path $TargetBotPath 'project.json') -PathType Leaf) {
         }
     }
 } else {
-    Write-Host '[INFO] New-bot workspace detected; Graphify extraction deferred until the scaffold is stable.'
+    Write-Host '[INFO] New-bot workspace detected; Graphify extraction deferred until the scaffold is stable when requested.'
 }
 
-& $diagnosticsScript -TargetBotPath $TargetBotPath
+& $diagnosticsScript -TargetBotPath $TargetBotPath -CheckGraphify:$EnableGraphify
 if ($LASTEXITCODE -ne 0) { throw "Dev Kit diagnostics failed with exit code $LASTEXITCODE." }
 Write-Host ''
 Write-Host '+------------------------------------------------------+'
