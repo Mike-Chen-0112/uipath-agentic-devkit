@@ -1,4 +1,4 @@
-# RPA AI Dev Kit v0.12.1
+# RPA AI Dev Kit v0.12.2
 
 Create or change UiPath automations through GitHub Copilot in VS Code. The same setup supports new bots and existing UiPath projects.
 
@@ -34,7 +34,7 @@ The bot folder can contain an existing UiPath project, or it can be an empty fol
 
 #### Option B: You have the ZIP file
 
-1. Find `rpa-ai-devkit-bot-0.12.1.zip` in the `artifacts` folder.
+1. Find `rpa-ai-devkit-bot-0.12.2.zip` in the `artifacts` folder.
 2. Extract the ZIP into a temporary folder, not directly into the bot folder.
 3. Open PowerShell in the extracted folder. Run this command and replace `C:\RPA\MyBot` with the folder for your bot:
 
@@ -45,6 +45,24 @@ The bot folder can contain an existing UiPath project, or it can be an empty fol
 ```
 
 Wait for `RPA AI DEV KIT IS READY`. Resolve any reported `FAIL` before continuing.
+
+### v0.12.2 lean scaffolding (optional)
+
+A new bot can omit only the optional Humanizer and Caveman prose Skills (four files), while retaining required runtime, validation, safety checks and rollback:
+
+```powershell
+./scripts/Install-RpaAiDevKit.ps1 -TargetBotPath C:\RPA\MyBot -SlimPayload
+```
+
+Use `./scripts/Export-RpaAiDevKit.ps1 -SlimPayload` for a slim ZIP. Standard payload remains the compatibility default. Existing optional Skills are not deleted automatically on upgrade.
+
+Official project creation provides `-Json` for future router integrations and uses summary telemetry by default; use `-TelemetryLevel Detailed` for per-step scaffold and Requirements events:
+
+```powershell
+& ./.rpa-ai/scripts/New-RpaProject.ps1 -ProjectName InvoiceBot -ProjectType Process -TargetFramework Windows -Json
+```
+
+A failed scaffold still throws, preserves safety gates, and never emits a success JSON object.
 
 ### 3. Make one request
 
@@ -166,8 +184,8 @@ From this central repository:
 This produces:
 
 ```text
-artifacts/rpa-ai-devkit-bot-0.12.1/
-artifacts/rpa-ai-devkit-bot-0.12.1.zip
+artifacts/rpa-ai-devkit-bot-0.12.2/
+artifacts/rpa-ai-devkit-bot-0.12.2.zip
 ```
 
 The payload is assembled from [distribution/payload-manifest.json](distribution/payload-manifest.json). `.rpa-ai/kit-manifest.json` inside the payload records the release version, ownership mode, and SHA-256 hash of every source payload file. The generated manifest itself is the root metadata document and does not self-hash.
@@ -196,7 +214,7 @@ From the central repository:
 
 ```powershell
 ./scripts/Import-RpaAiDevKit.ps1 `
-  -PayloadPath ./artifacts/rpa-ai-devkit-bot-0.12.1 `
+  -PayloadPath ./artifacts/rpa-ai-devkit-bot-0.12.2 `
   -TargetBotPath C:\RPA\MyBot
 ```
 
@@ -404,7 +422,7 @@ Do not patch a managed file inside one bot to work around a product limitation. 
 
 ## Release status
 
-v0.12.1 is a controlled Development pilot for existing-bot fixes and greenfield Process/REFramework development. Setup is self-healing and prompt-free, and there is no execution time budget. UI Automation compatibility uses the exact package's declared minimum Studio requirement before release-line matching; unmet minimums still block, including those discovered during restore. Existing pins, risk-based Fast Lane behavior, capture requirements, and final-build delivery gates remain in place. Deterministic repository tests do not replace workstation pilots. Real UiPath CLI creation, native diagnostics/build, VS Code custom-agent discovery, live browser capture, pinned Graphify installation, and representative Development executions must be recorded as passed or `NOT_RUN`; they must never be inferred.
+v0.12.2 is a controlled Development pilot for existing-bot fixes and greenfield Process/REFramework development. Setup is self-healing and prompt-free, and there is no execution time budget. UI Automation compatibility uses the exact package's declared minimum Studio requirement before release-line matching; unmet minimums still block, including those discovered during restore. Existing pins, risk-based Fast Lane behavior, capture requirements, and final-build delivery gates remain in place. Deterministic repository tests do not replace workstation pilots. Real UiPath CLI creation, native diagnostics/build, VS Code custom-agent discovery, live browser capture, pinned Graphify installation, and representative Development executions must be recorded as passed or `NOT_RUN`; they must never be inferred.
 
 <!-- markdownlint-disable MD033 -->
 </details>

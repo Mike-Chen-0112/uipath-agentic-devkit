@@ -3,6 +3,7 @@ param(
     [string]$OutputDirectory = (Join-Path (Get-Location).Path 'artifacts'),
     [string]$ManifestPath,
     [switch]$NoZip,
+    [switch]$SlimPayload,
     [switch]$Force
 )
 
@@ -64,7 +65,11 @@ $OutputDirectory = [System.IO.Path]::GetFullPath($OutputDirectory)
 $payloadPath = Join-Path $OutputDirectory $payloadName
 $zipPath = "$payloadPath.zip"
 
-$validatedFiles = @($manifest.files | ForEach-Object {
+# Slim mode excludes only optional prose skills, never managed runtime or safeguards.
+$includedFiles = @($manifest.files | Where-Object {
+    -not $SlimPayload -or ([string]$_.destination -notmatch '^\.github/skills/(humanizer|caveman)/')
+})
+$validatedFiles = @($includedFiles | ForEach-Object {
     if ($_.ownership -notin @('managed','preserve')) { throw "Unknown payload ownership '$($_.ownership)' for '$($_.destination)'" }
     $sourcePath = Resolve-ContainedPath $kitRoot ([string]$_.source) 'Payload source'
     $destinationPath = Resolve-ContainedPath $payloadPath ([string]$_.destination) 'Payload destination'

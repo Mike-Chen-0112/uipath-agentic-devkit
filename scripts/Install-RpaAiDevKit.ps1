@@ -6,6 +6,7 @@ param(
     [switch]$InstallUiPathSkills,
     [switch]$UpdateUiPathSkills,
     [switch]$InstallGraphify,
+    [switch]$SlimPayload,
     [switch]$EnableGraphifyHooks,
     [switch]$Upgrade,
     [switch]$ForceManagedFiles,
@@ -24,7 +25,7 @@ $kitVersion = (Get-Content $kitVersionPath -Raw).Trim()
 
 $temporaryExport = Join-Path $env:TEMP ('rpa-ai-devkit-install-' + [guid]::NewGuid().ToString('N'))
 try {
-    & (Join-Path $kitRoot 'scripts\Export-RpaAiDevKit.ps1') -OutputDirectory $temporaryExport -NoZip
+    & (Join-Path $kitRoot 'scripts\Export-RpaAiDevKit.ps1') -OutputDirectory $temporaryExport -NoZip -SlimPayload:$SlimPayload
     $payload = Get-ChildItem $temporaryExport -Directory | Select-Object -First 1
     if (-not $payload) { throw 'Payload export did not produce a directory.' }
 

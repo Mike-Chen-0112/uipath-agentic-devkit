@@ -18,7 +18,10 @@ param(
     [string]$Description = '',
     [string]$TargetBotPath = (Get-Location).Path,
     [string]$TemplatePackageId,
-    [string]$TemplatePackageVersion
+    [string]$TemplatePackageVersion,
+    [ValidateSet('Summary','Detailed')]
+    [string]$TelemetryLevel = 'Summary',
+    [switch]$Json
 )
 
 $ErrorActionPreference = 'Stop'
@@ -42,6 +45,7 @@ $executionStatePath = Join-Path $TargetBotPath '.ai\evidence\execution-state.jso
 $executionStageStarted = (Test-Path $executionStateScript -PathType Leaf) -and (Test-Path $executionStatePath -PathType Leaf)
 $scaffoldTelemetryEvent = $null
 $scaffoldTelemetryCompleted = $false
+$detailedScaffoldTelemetry = $TelemetryLevel -eq 'Detailed'
 $templateResolutionEvent = $null
 $templateResolutionCompleted = $false
 $directoryEvent = $null
@@ -104,7 +108,7 @@ function Test-OfficialTemplate {
         $Template.isOfficial -eq $true
 }
 
-$templateResolutionEvent = if ($scaffoldTelemetryEvent) { Start-DeveloperEvent -ProjectPath $TargetBotPath -Category SCAFFOLDING -Subcategory template_resolution -Operation 'scaffolding.template_resolution' -ParentEventId $scaffoldTelemetryEvent.eventId } else { $null }
+$templateResolutionEvent = if ($detailedScaffoldTelemetry -and $scaffoldTelemetryEvent) { Start-DeveloperEvent -ProjectPath $TargetBotPath -Category SCAFFOLDING -Subcategory template_resolution -Operation 'scaffolding.template_resolution' -ParentEventId $scaffoldTelemetryEvent.eventId } else { $null }
 $usesInit = Test-UipCommand @('rpa','init')
 $usesCreateProject = if ($usesInit) { $false } else { Test-UipCommand @('rpa','create-project') }
 if (-not $usesInit -and -not $usesCreateProject) {
@@ -156,7 +160,7 @@ if ($templateResolutionEvent) {
 
 $parent = Split-Path $TargetBotPath -Parent
 $stagingContainer = Join-Path $parent ('.rpa-ai-scaffold-' + [guid]::NewGuid().ToString('N'))
-$directoryEvent = if ($scaffoldTelemetryEvent) { Start-DeveloperEvent -ProjectPath $TargetBotPath -Category SCAFFOLDING -Subcategory directory_creation -Operation 'scaffolding.directory_creation' -ParentEventId $scaffoldTelemetryEvent.eventId } else { $null }
+$directoryEvent = if ($detailedScaffoldTelemetry -and $scaffoldTelemetryEvent) { Start-DeveloperEvent -ProjectPath $TargetBotPath -Category SCAFFOLDING -Subcategory directory_creation -Operation 'scaffolding.directory_creation' -ParentEventId $scaffoldTelemetryEvent.eventId } else { $null }
 New-Item -ItemType Directory -Force -Path $stagingContainer | Out-Null
 if ($directoryEvent) { Stop-DeveloperEvent -ProjectPath $TargetBotPath -EventId $directoryEvent.eventId -Status PASS -Artifacts @([ordered]@{path=$stagingContainer}) | Out-Null; $directoryEventCompleted = $true }
 $generatedProject = Join-Path $stagingContainer $ProjectName
@@ -182,7 +186,7 @@ if ($ProjectType -eq 'Process') {
 }
 
 $stageStarted = $false
-$creationEvent = if ($scaffoldTelemetryEvent) { Start-DeveloperEvent -ProjectPath $TargetBotPath -Category SCAFFOLDING -Subcategory $(if ($ProjectType -eq 'Process') { 'blank_template_creation' } else { 'official_template_creation' }) -Operation $(if ($ProjectType -eq 'Process') { 'scaffolding.blank_template_creation' } else { 'scaffolding.official_template_creation' }) -ParentEventId $scaffoldTelemetryEvent.eventId } else { $null }
+$creationEvent = if ($detailedScaffoldTelemetry -and $scaffoldTelemetryEvent) { Start-DeveloperEvent -ProjectPath $TargetBotPath -Category SCAFFOLDING -Subcategory $(if ($ProjectType -eq 'Process') { 'blank_template_creation' } else { 'official_template_creation' }) -Operation $(if ($ProjectType -eq 'Process') { 'scaffolding.blank_template_creation' } else { 'scaffolding.official_template_creation' }) -ParentEventId $scaffoldTelemetryEvent.eventId } else { $null }
 $creationStatus = 'FAIL'
 $created = $null
 try {
@@ -210,7 +214,7 @@ if ($created.ExitCode -notin @(0, 7)) {
 if (-not (Test-Path $projectJson -PathType Leaf)) {
     throw "UiPath scaffolding did not create project.json. Exit code: $($created.ExitCode). Staging preserved at $stagingContainer"
 }
-if ($scaffoldTelemetryEvent) {
+if ($detailedScaffoldTelemetry -and $scaffoldTelemetryEvent) {
     Add-DeveloperInstantEvent -ProjectPath $TargetBotPath -Category SCAFFOLDING -Subcategory project_json_creation -Operation 'scaffolding.project_json_creation' -ParentEventId $scaffoldTelemetryEvent.eventId -Artifacts @([ordered]@{path=$projectJson}) | Out-Null
 }
 
@@ -224,7 +228,7 @@ $workflows = @(Get-ChildItem $generatedProject -Recurse -File -Filter '*.xaml')
 if ($workflows.Count -eq 0) {
     throw "UiPath scaffolding created no XAML workflow. Staging preserved at $stagingContainer"
 }
-if ($scaffoldTelemetryEvent) {
+if ($detailedScaffoldTelemetry -and $scaffoldTelemetryEvent) {
     $mainPath = Join-Path $generatedProject ([string]$project.main)
     Add-DeveloperInstantEvent -ProjectPath $TargetBotPath -Category SCAFFOLDING -Subcategory main_xaml_initialization -Operation 'scaffolding.main_xaml_initialization' -ParentEventId $scaffoldTelemetryEvent.eventId -Status $(if (Test-Path $mainPath -PathType Leaf) { 'PASS' } else { 'FAIL' }) -Artifacts @([ordered]@{path=$mainPath}) | Out-Null
     $standardFolders = @('Input','Output','Log')
@@ -283,7 +287,7 @@ $evidenceEvent = $null
 $evidenceEventCompleted = $false
 
 try {
-    if ($scaffoldTelemetryEvent) { $transferEvent = Start-DeveloperEvent -ProjectPath $TargetBotPath -Category SCAFFOLDING -Subcategory transfer -Operation 'scaffolding.transfer' -ParentEventId $scaffoldTelemetryEvent.eventId }
+    if ($detailedScaffoldTelemetry -and $scaffoldTelemetryEvent) { $transferEvent = Start-DeveloperEvent -ProjectPath $TargetBotPath -Category SCAFFOLDING -Subcategory transfer -Operation 'scaffolding.transfer' -ParentEventId $scaffoldTelemetryEvent.eventId }
     foreach ($item in Get-ChildItem $generatedProject -Force) {
         $destination = Join-Path $TargetBotPath $item.Name
         $copiedPaths.Add($destination)
@@ -305,7 +309,7 @@ try {
         $transferEventCompleted = $true
     }
 
-    if ($scaffoldTelemetryEvent) { $evidenceEvent = Start-DeveloperEvent -ProjectPath $TargetBotPath -Category SCAFFOLDING -Subcategory initial_evidence_setup -Operation 'scaffolding.initial_evidence_setup' -ParentEventId $scaffoldTelemetryEvent.eventId }
+    if ($detailedScaffoldTelemetry -and $scaffoldTelemetryEvent) { $evidenceEvent = Start-DeveloperEvent -ProjectPath $TargetBotPath -Category SCAFFOLDING -Subcategory initial_evidence_setup -Operation 'scaffolding.initial_evidence_setup' -ParentEventId $scaffoldTelemetryEvent.eventId }
     New-Item -ItemType Directory -Force -Path $evidenceDirectory | Out-Null
     $evidence = [ordered]@{
         schemaVersion = 1
@@ -352,7 +356,7 @@ catch {
     throw "$($_.Exception.Message) Copied scaffold paths were rolled back. Staging preserved at $stagingContainer"
 }
 
-$requirementsResult = & $requirementsScript -Action InitializeNew -ProjectPath $TargetBotPath -ParentEventId $(if ($scaffoldTelemetryEvent) { $scaffoldTelemetryEvent.eventId } else { '' }) -Json | ConvertFrom-Json
+$requirementsResult = & $requirementsScript -Action InitializeNew -ProjectPath $TargetBotPath -ParentEventId $(if ($scaffoldTelemetryEvent) { $scaffoldTelemetryEvent.eventId } else { '' }) -DetailedTelemetry:$detailedScaffoldTelemetry -Json | ConvertFrom-Json
 if ($requirementsResult.status -ne 'PASS' -or -not $requirementsResult.folder.exists -or -not $requirementsResult.entryPoint.exists) {
     throw "Requirements workspace initialization did not complete. Project and staging are preserved at $TargetBotPath and $stagingContainer"
 }
@@ -363,9 +367,30 @@ if ($scaffoldTelemetryEvent) {
     $scaffoldTelemetryCompleted = $true
 }
 
-Write-Host "[PASS] Created $ProjectType project '$ProjectName' in $TargetBotPath"
-Write-Host "[PASS] Scaffold evidence: $evidencePath"
-Write-Host "[PASS] Human-owned requirements workspace: $(Join-Path $TargetBotPath 'Requirements\REQUIREMENTS.md')"
-if ($created.ExitCode -eq 7) {
-    Write-Host "[INFO] Accepted UiPath CLI partial-success exit $($created.ExitCode) after project structure and transfer hashes passed verification."
+if ($Json) {
+    [pscustomobject][ordered]@{
+        schemaVersion = 1
+        status = 'PASS'
+        projectPath = $TargetBotPath
+        projectName = [string]$project.name
+        projectType = $ProjectType
+        targetFramework = [string]$project.targetFramework
+        expressionLanguage = [string]$project.expressionLanguage
+        entryPoint = [string]$project.main
+        generator = 'official UiPath CLI'
+        commandFamily = "uip rpa $createVerb"
+        template = $evidence.template
+        cliExitCode = $created.ExitCode
+        evidencePath = $evidencePath
+        requirementsPath = (Join-Path $TargetBotPath 'Requirements\REQUIREMENTS.md')
+        generatedFileCount = @($generatedFileRecords).Count
+        telemetryLevel = $TelemetryLevel
+    } | ConvertTo-Json -Depth 8
+} else {
+    Write-Host "[PASS] Created $ProjectType project '$ProjectName' in $TargetBotPath"
+    Write-Host "[PASS] Scaffold evidence: $evidencePath"
+    Write-Host "[PASS] Human-owned requirements workspace: $(Join-Path $TargetBotPath 'Requirements\REQUIREMENTS.md')"
+    if ($created.ExitCode -eq 7) {
+        Write-Host "[INFO] Accepted UiPath CLI partial-success exit $($created.ExitCode) after project structure and transfer hashes passed verification."
+    }
 }
