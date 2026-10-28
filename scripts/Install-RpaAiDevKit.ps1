@@ -33,7 +33,8 @@ try {
         -PayloadPath $payload.FullName `
         -TargetBotPath $TargetBotPath `
         -Upgrade `
-        -OverwriteManaged:$ForceManagedFiles
+        -OverwriteManaged:$ForceManagedFiles `
+        -EnableGraphify:$InstallGraphify
 }
 finally {
     Remove-Item $temporaryExport -Recurse -Force -ErrorAction SilentlyContinue
@@ -53,9 +54,6 @@ if($RuntimeConfigPath.Count -or $CompilerPath){
 
 if ($Upgrade) {
     Write-Host '[INFO] -Upgrade is retained for command compatibility; unchanged managed files are now upgraded automatically.'
-}
-if ($InstallGraphify) {
-    Write-Host '[INFO] -InstallGraphify is retained for command compatibility; Graphify activation is now mandatory during import.'
 }
 if ($EnableGraphifyHooks) {
     throw "-EnableGraphifyHooks is disabled by the v$kitVersion local-only policy. Graph refreshes run through hardened Dev Kit wrappers."

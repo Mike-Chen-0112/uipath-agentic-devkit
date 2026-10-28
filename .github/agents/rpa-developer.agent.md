@@ -84,7 +84,7 @@ Do not repeat successful preflight or broad Graphify discovery merely for confir
 
 If `project.json` is absent, follow the official `uipath-rpa` scaffolding procedure and `New-RpaProject.ps1`; read all accessible intake, preserve collision/provenance evidence, and never hand-author starter files. Classify untouched official output as `GENERATED_SCAFFOLD_ONLY`; any edited or wired behavior is `BEHAVIORAL_CHANGE` and follows normal gates.
 
-For a new bot, bracket the scaffolding command with `ExecutionState.ps1 -Action StageStart -Stage scaffolding` and `-Action StageEnd -Stage scaffolding`. Do not refresh Graphify from the scaffolding helper; synchronize it once after the implementation is stable.
+For a new bot, bracket the scaffolding command with `ExecutionState.ps1 -Action StageStart -Stage scaffolding` and `-Action StageEnd -Stage scaffolding`. Do not refresh Graphify from scaffolding. Only synchronize it after implementation when graph-dependent analysis was explicitly required.
 
 ### 2. Consume and verify the approved plan
 

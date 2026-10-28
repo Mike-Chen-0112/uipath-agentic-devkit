@@ -8,17 +8,17 @@ Graphify gives the agents a per-bot relationship map so they can discover impact
 
 The current Dev Kit pins Graphify in `graph/config/graphify-version.json`. Do not silently upgrade it on developer machines. Change the pin through normal review, test it against pilot bots, then roll it forward.
 
-## Mandatory activation
+## On-demand activation
 
-Graphify is activated automatically by a checked payload import. To repair or verify an installed bot directly:
+Graphify is not installed or refreshed during ordinary bot activation. Use the deterministic Project Mapper for routine work. To explicitly install/refresh the pinned local-only graph when dependency analysis requires it:
 
 ```powershell
-./.rpa-ai/scripts/Activate-RpaAiDevKit.ps1
+./.rpa-ai/scripts/Activate-RpaAiDevKit.ps1 -EnableGraphify
 ```
 
-Activation verifies managed Dev Kit files and installs or checks the pinned Graphify package. For an existing UiPath project it reuses or refreshes the bot-local graph and proves that `graphify-out/graph.json` is non-empty valid JSON; for a project-less new bot it records deferred extraction until stable finalization.
+When requested, activation verifies managed files, installs or checks pinned Graphify, and refreshes an existing project's graph. Project-less new bots defer extraction. Without `-EnableGraphify`, missing graph artifacts are expected and are not errors.
 
-Graphify git hooks and VS Code integration are disabled in v0.11.0 because they can invoke Graphify outside the hardened wrappers. For an existing project, the Coordinator reuses or refreshes the graph before planning when its content fingerprint requires it; new-bot work defers graph discovery until stable finalization. The Developer refreshes once after final source changes when needed, and the Auditor consumes that final snapshot when `AUDIT_MODE` is `LIGHT` or `FULL`. For `AUDIT_MODE: NONE`, the Coordinator/Developer use the final snapshot for completion. A post-audit refresh is unnecessary when the content fingerprint is unchanged.
+Graphify git hooks and VS Code integration are disabled in v0.11.0 because they can invoke Graphify outside the hardened wrappers. The Coordinator starts with the Project Mapper; Graphify is invoked only for material gaps or ambiguous relationships. When Graphify was used, the Developer refreshes it after relevant final source changes and the Auditor may reuse the same snapshot. No graph is required for a successful ordinary low-risk task.
 
 Graphify refresh optimization uses a git-based content fingerprint since v0.11.2: an `-Mode Update` refresh reuses the prior graph when tracked/untracked source and the Graphify ruleset files are unchanged, and always falls back to a full extract when git is unavailable, the fingerprint differs, or `-Force` is passed. Graphify's own binary, backend, isolation, and query-logging behavior are unchanged.
 

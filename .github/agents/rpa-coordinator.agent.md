@@ -42,7 +42,7 @@ Before reading bot business content or delegating work:
 3. run `./.rpa-ai/scripts/Test-ManagedFileIntegrity.ps1`;
 4. run `./.rpa-ai/scripts/Manage-RequirementsWorkspace.ps1 -Action Discover -ReadEntryPoint -Json`; it inventories `Requirements/` before returning the structured `REQUIREMENTS.md` entry point, never creates or changes content during discovery, and returns an absent workspace without blocking;
 5. for an existing bot, run `./.rpa-ai/scripts/Get-UiPathProjectMap.ps1 -OutputPath .ai/evidence/project-map.json -Json` before broad graph queries, repository search, or raw XAML reading; retain its compact project metadata, workflow map, Requirements metadata, forward/reverse dependencies, warnings, and metrics as `PROJECT_MAP_STATE`; for a new bot, record `PROJECT_MAP_STATE: DEFERRED_NEW_BOT`;
-6. for an existing bot, run `./.rpa-ai/scripts/Refresh-BotGraph.ps1 -Mode Update`, which reuses a valid unchanged graph; for a new bot, defer Graphify and record `GRAPH_STATE: DEFERRED_NEW_BOT`;
+6. use the deterministic Project Mapper by default; request `Activate-RpaAiDevKit.ps1 -EnableGraphify` and `Refresh-BotGraph.ps1 -Mode Update` only if the Mapper cannot resolve material cross-workflow relationships. Otherwise record `GRAPH_STATE: NOT_REQUIRED`;
 7. require managed integrity and, for an existing bot, graph readiness to pass; require the mapper to pass or explicitly record `PROJECT_MAP_STATE: FALLBACK` with the failure reason before using the existing graph/source discovery path; a corrupt mapper cache must rebuild automatically and is not itself a blocker;
 8. read `.rpa-ai/kit-manifest.json` and treat every `managed` path as immutable during bot development.
 
@@ -51,7 +51,7 @@ This is the Coordinator-owned preflight. Record and pass its result forward inst
 ```text
 PREFLIGHT_STATUS: PASS
 MANAGED_CORE_STATUS: PASS
-GRAPH_STATE: { status: PASS | REUSED, fingerprint: <source-state>, refreshedAtUtc: <timestamp>, graphifyVersion: <version> }
+GRAPH_STATE: { status: PASS | REUSED | NOT_REQUIRED, fingerprint: <source-state-or-null>, refreshedAtUtc: <timestamp-or-null>, graphifyVersion: <version-or-null> }
 PROJECT_MAP_STATE: { status: PASS, cacheStatus: <status>, xamlFilesMapped: <count>, xamlFilesParsed: <count>, cacheHits: <count>, mappingDurationMs: <duration> }
 PREFLIGHT_SOURCE_FINGERPRINT: <fingerprint>
 ```
@@ -255,7 +255,7 @@ After Developer returns, apply the approved `AUDIT_MODE` and mandatory-trigger r
 - the approved Change Contract and Executable Change Plan first;
 - the risk level, changed-file list or diff, Developer Audit Packet, final graph/integrity evidence, compact deterministic summary, and applicable capability evidence.
 
-Do not invoke the Auditor until the Developer has supplied final source-state evidence and, when implementation changed source, one final Graphify refresh result. The Developer may reuse the Coordinator's managed-core result when no managed path changed; rerun integrity only when managed files may have changed or the evidence is stale/suspicious. This final evidence is consumed by the Auditor and is not a second routine preflight. A no-audit completion still requires the same final source-state evidence.
+Do not invoke the Auditor until the Developer has supplied final source-state evidence and, only when Graphify was explicitly used for a material dependency question, a final current graph snapshot. The Developer may reuse the Coordinator's managed-core result when no managed path changed; rerun integrity only when managed files may have changed or the evidence is stale/suspicious. This final evidence is consumed by the Auditor and is not a second routine preflight. A no-audit completion still requires the same final source-state evidence.
 
 Do not tell the Auditor to approve. For `LIGHT`, ask it to determine `PASS`, `REWORK`, `ESCALATE_TO_FULL_AUDIT`, or `BLOCKED`; for `FULL`, ask it to determine `PASS`, `REWORK`, or `BLOCKED`.
 

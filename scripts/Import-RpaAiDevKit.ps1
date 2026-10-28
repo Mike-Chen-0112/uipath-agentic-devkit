@@ -7,7 +7,8 @@ param(
     [string]$TargetBotPath,
 
     [switch]$Upgrade,
-    [switch]$OverwriteManaged
+    [switch]$OverwriteManaged,
+    [switch]$EnableGraphify
 )
 
 $ErrorActionPreference = 'Stop'
@@ -330,7 +331,7 @@ finally {
 }
 
 try {
-    & $activationEntries[0].Destination -TargetBotPath $TargetBotPath
+    & $activationEntries[0].Destination -TargetBotPath $TargetBotPath -EnableGraphify:$EnableGraphify
 } catch {
     throw "Dev Kit files were imported, but mandatory activation failed. Fix the local prerequisite and run '.rpa-ai\scripts\Activate-RpaAiDevKit.ps1': $($_.Exception.Message)"
 }

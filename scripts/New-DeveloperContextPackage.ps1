@@ -172,8 +172,10 @@ function Test-PackageFreshness {
     if ([string]$Package.freshness.sourceFingerprint -ne [string]$snapshot.sourceFingerprint) { Add-Reason $reasons 'SOURCE_FINGERPRINT_MISMATCH' }
     if ([string]$Package.freshness.graphConfigFingerprint -ne [string]$snapshot.graphConfigFingerprint) { Add-Reason $reasons 'GRAPH_CONFIG_FINGERPRINT_MISMATCH' }
     $graphFile = Resolve-ProjectPath ([string]$Package.graph.fullGraphPath)
-    if (-not (Test-Path -LiteralPath $graphFile -PathType Leaf)) { Add-Reason $reasons 'GRAPH_MISSING' }
-    elseif ([string]$Package.graph.fullGraphSha256 -ne (Get-Sha256 $graphFile)) { Add-Reason $reasons 'GRAPH_FINGERPRINT_MISMATCH' }
+    if ([string]$Package.graph.fullGraphSha256) {
+        if (-not (Test-Path -LiteralPath $graphFile -PathType Leaf)) { Add-Reason $reasons 'GRAPH_MISSING' }
+        elseif ([string]$Package.graph.fullGraphSha256 -ne (Get-Sha256 $graphFile)) { Add-Reason $reasons 'GRAPH_FINGERPRINT_MISMATCH' }
+    }
     foreach ($source in @($Package.sourceAccess.paths)) {
         $sourceFile = Resolve-ProjectPath ([string]$source.path)
         if (-not (Test-Path -LiteralPath $sourceFile -PathType Leaf)) { Add-Reason $reasons 'RELEVANT_WORKFLOW_NOT_FOUND'; continue }
@@ -353,10 +355,15 @@ $fullGraphPath = Resolve-ProjectPath $GraphPath
 $fullGraphRefreshPath = Resolve-ProjectPath $GraphRefreshStatePath
 $graph = $null
 $refreshState = $null
-if (-not (Test-Path -LiteralPath $fullGraphPath -PathType Leaf)) { Add-Reason $fallbackReasons 'GRAPH_MISSING' }
-else { $graph = [System.IO.File]::ReadAllText($fullGraphPath, [System.Text.Encoding]::UTF8) | ConvertFrom-Json }
-if (-not (Test-Path -LiteralPath $fullGraphRefreshPath -PathType Leaf)) { Add-Reason $fallbackReasons 'GRAPH_REFRESH_STATE_MISSING' }
-else { $refreshState = [System.IO.File]::ReadAllText($fullGraphRefreshPath, [System.Text.Encoding]::UTF8) | ConvertFrom-Json }
+# A graph is optional; an absent graph must not force a full-context fallback.
+# Explicit expected fingerprints still require a matching graph.
+if (Test-Path -LiteralPath $fullGraphPath -PathType Leaf) {
+    $graph = [System.IO.File]::ReadAllText($fullGraphPath, [System.Text.Encoding]::UTF8) | ConvertFrom-Json
+} elseif ($ExpectedGraphFingerprint) { Add-Reason $fallbackReasons 'GRAPH_MISSING' }
+if (Test-Path -LiteralPath $fullGraphRefreshPath -PathType Leaf) {
+    $refreshState = [System.IO.File]::ReadAllText($fullGraphRefreshPath, [System.Text.Encoding]::UTF8) | ConvertFrom-Json
+} elseif ($ExpectedGraphFingerprint) { Add-Reason $fallbackReasons 'GRAPH_REFRESH_STATE_MISSING' }
+if (-not $refreshState -and -not $ExpectedGraphFingerprint) { $graph = $null }
 if ($refreshState) {
     if ([string]$refreshState.sourceFingerprint -ne [string]$snapshot.sourceFingerprint) { Add-Reason $fallbackReasons 'GRAPH_FINGERPRINT_MISMATCH' }
     if ($ExpectedGraphFingerprint -and [string]$refreshState.sourceFingerprint -ne $ExpectedGraphFingerprint) { Add-Reason $fallbackReasons 'GRAPH_FINGERPRINT_MISMATCH' }

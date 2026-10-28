@@ -26,10 +26,13 @@ Write-Host "OS: $([Environment]::OSVersion.VersionString)"
 Write-Check 'PowerShell runtime' ($PSVersionTable.PSVersion -ge [version]'5.1') '5.1 or later required'
 $gitCommand = Get-Command git -ErrorAction SilentlyContinue | Select-Object -First 1
 Write-Check 'git command' ($null -ne $gitCommand) $(if ($gitCommand) { $gitCommand.Source } else { 'not found on PATH' })
-foreach ($commandName in @('uip','graphify')) {
+foreach ($commandName in @('uip')) {
     $commandPath = Resolve-DevKitTool -Name $commandName -TargetBotPath $TargetBotPath
     Write-Check "$commandName command" ([bool]$commandPath) $(if ($commandPath) { $commandPath } else { 'not found in PATH or the current user profile' })
 }
+
+$graphifyCommand = Resolve-DevKitTool -Name graphify -TargetBotPath $TargetBotPath
+Write-Host $(if ($graphifyCommand) { '[INFO] Graphify available on demand.' } else { '[INFO] Graphify not installed (optional).' })
 
 $manifestPath = Join-Path $TargetBotPath '.rpa-ai\kit-manifest.json'
 if (Test-Path $manifestPath -PathType Leaf) {
@@ -100,6 +103,8 @@ $refreshScript = Join-Path $TargetBotPath '.rpa-ai\scripts\Refresh-BotGraph.ps1'
 $projectExists = Test-Path (Join-Path $TargetBotPath 'project.json') -PathType Leaf
 if (-not $projectExists) {
     Write-Host '[INFO] Bot-local graph - deferred until official new-bot scaffolding creates project.json.'
+} elseif (-not $graphifyCommand -or -not (Test-Path (Join-Path $TargetBotPath 'graphify-out\graph.json') -PathType Leaf)) {
+    Write-Host '[INFO] Bot-local graph - absent; Project Mapper is the default. Run Activate-RpaAiDevKit.ps1 -EnableGraphify when a graph is needed.'
 } elseif (Test-Path $refreshScript -PathType Leaf) {
     try {
         & $refreshScript -TargetBotPath $TargetBotPath -Mode Status
