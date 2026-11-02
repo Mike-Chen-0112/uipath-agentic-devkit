@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "version": "0.12.2",
+  "designation": "official-bot-distribution-artifact",
+  "artifact": "rpa-ai-devkit-bot-0.12.2.zip",
+  "artifactSha256": "476a0c8af63a8e96792d86ea43010a2e85129f0399136024dd58289acda48035",
+  "packageProfile": "Standard",
+  "payloadManifest": ".rpa-ai/kit-manifest.json",
+  "payloadManifestSha256": "3e531190c4a49c96069e28ff7a5a21fe65f243cd558d3db5753877d4630fb39b",
+  "payloadManifestEntryCount": 97,
+  "verification": {
+    "zipCrc": "PASS",
+    "payloadFileSha256": "97/97 PASS",
+    "centralSourceParity": "NOT_VERIFIED"
+  },
+  "notes": [
+    "Provenance: user-provided archive inspected on 2026-11-02.",
+    "This manifest records the official archive identity, not a GitHub-hosted copy of the ZIP.",
+    "The ZIP is a bot deployment payload; its paths must be mapped through distribution/payload-manifest.json before source synchronization.",
+    "Do not replace the central repository root with the payload layout: source scripts, tests, packaging and build files would be removed.",
+    "Central source synchronization is pending: some managed payload files differ from main."
+  ]
+}
