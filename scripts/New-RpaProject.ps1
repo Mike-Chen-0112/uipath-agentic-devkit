@@ -1,14 +1,11 @@
 [CmdletBinding()]
 param(
-    [Parameter(Mandatory=$true)]
     [ValidatePattern('^[A-Za-z][A-Za-z0-9._-]*$')]
     [string]$ProjectName,
 
-    [Parameter(Mandatory=$true)]
     [ValidateSet('Process','REFramework')]
     [string]$ProjectType,
 
-    [Parameter(Mandatory=$true)]
     [ValidateSet('Windows','Portable')]
     [string]$TargetFramework,
 
@@ -19,12 +16,60 @@ param(
     [string]$TargetBotPath = (Get-Location).Path,
     [string]$TemplatePackageId,
     [string]$TemplatePackageVersion,
+    [string]$RequestJson,
+    [string]$ExecutionStatePath,
     [ValidateSet('Summary','Detailed')]
     [string]$TelemetryLevel = 'Summary',
     [switch]$Json
 )
 
 $ErrorActionPreference = 'Stop'
+$originalTelemetryLevel = $env:RPA_DEVKIT_TELEMETRY_LEVEL
+$stagingContainer = $null
+$evidencePath = $null
+$scaffoldTelemetryEvent = $null
+$scaffoldTelemetryCompleted = $false
+$templateResolutionEvent = $null
+$templateResolutionCompleted = $false
+$directoryEvent = $null
+$directoryEventCompleted = $false
+trap {
+    $trappedError = $_
+    try {
+        if ($templateResolutionEvent -and -not $templateResolutionCompleted) { Stop-DeveloperEvent -ProjectPath $TargetBotPath -EventId $templateResolutionEvent.eventId -Status FAIL -Reason $trappedError.Exception.Message | Out-Null }
+        if ($directoryEvent -and -not $directoryEventCompleted) { Stop-DeveloperEvent -ProjectPath $TargetBotPath -EventId $directoryEvent.eventId -Status FAIL -Reason $trappedError.Exception.Message | Out-Null }
+        if ($scaffoldTelemetryEvent -and -not $scaffoldTelemetryCompleted) {
+            Stop-DeveloperEvent -ProjectPath $TargetBotPath -EventId $scaffoldTelemetryEvent.eventId -Status FAIL -Reason $trappedError.Exception.Message | Out-Null
+            $scaffoldTelemetryCompleted = $true
+        }
+    } catch {}
+    if ($Json) {
+        [ordered]@{ schemaVersion=1; contract='devkit.scaffold'; status='FAIL'; error=$trappedError.Exception.Message; stagingPath=$stagingContainer; evidencePath=$evidencePath } | ConvertTo-Json -Depth 5
+    }
+    $env:RPA_DEVKIT_TELEMETRY_LEVEL = $originalTelemetryLevel
+    throw $trappedError
+}
+if ($RequestJson) {
+    $request = $RequestJson | ConvertFrom-Json
+    if ($request -isnot [pscustomobject] -or $request.schemaVersion -isnot [ValueType] -or
+        $request.schemaVersion -is [bool] -or $request.schemaVersion -ne 1 -or
+        $request.contract -cne 'devkit.scaffold') { throw 'Unsupported scaffold request contract.' }
+    $allowedFields = @('schemaVersion','contract','projectName','projectType','targetFramework','expressionLanguage','description','targetBotPath','templatePackageId','templatePackageVersion')
+    foreach ($property in $request.PSObject.Properties) {
+        if ($property.Name -cnotin $allowedFields) { throw "Unknown scaffold request field: $($property.Name)" }
+        if ($property.Name -notin @('schemaVersion','contract')) {
+            if ($property.Value -isnot [string]) { throw "Scaffold request field must be a string: $($property.Name)" }
+            Set-Variable -Name $property.Name -Value $property.Value
+        }
+    }
+}
+if (-not $PSBoundParameters.ContainsKey('TelemetryLevel') -and $env:RPA_DEVKIT_TELEMETRY_LEVEL) {
+    $TelemetryLevel = $env:RPA_DEVKIT_TELEMETRY_LEVEL
+}
+$detailedScaffoldTelemetry = $TelemetryLevel -eq 'Detailed'
+$env:RPA_DEVKIT_TELEMETRY_LEVEL = $TelemetryLevel
+if ($ProjectName -notmatch '^[A-Za-z][A-Za-z0-9._-]*$' -or $ProjectType -notin @('Process','REFramework') -or
+    $TargetFramework -notin @('Windows','Portable') -or $ExpressionLanguage -notin @('VisualBasic','CSharp')) { throw 'A valid project name, project type, target framework and expression language are required.' }
 $TargetBotPath = (Resolve-Path $TargetBotPath).Path
 
 if (Test-Path (Join-Path $TargetBotPath 'project.json')) {
@@ -40,12 +85,12 @@ if (-not (Test-Path $resolverScript -PathType Leaf)) { throw "Tool resolver is m
 if (-not (Test-Path $commandScript -PathType Leaf)) { throw "Command helper is missing: $commandScript" }
 if (-not (Test-Path $requirementsScript -PathType Leaf)) { throw "Requirements workspace helper is missing: $requirementsScript" }
 . $resolverScript
+Import-Module (Join-Path $PSScriptRoot 'UiPathCliContract.psm1') -Force
 $uipCommand = Resolve-DevKitTool -Name uip -TargetBotPath $TargetBotPath -Required
-$executionStatePath = Join-Path $TargetBotPath '.ai\evidence\execution-state.json'
+$executionStatePath = if ($ExecutionStatePath) { [IO.Path]::GetFullPath($ExecutionStatePath) } else { Join-Path $TargetBotPath '.ai\evidence\execution-state.json' }
 $executionStageStarted = (Test-Path $executionStateScript -PathType Leaf) -and (Test-Path $executionStatePath -PathType Leaf)
 $scaffoldTelemetryEvent = $null
 $scaffoldTelemetryCompleted = $false
-$detailedScaffoldTelemetry = $TelemetryLevel -eq 'Detailed'
 $templateResolutionEvent = $null
 $templateResolutionCompleted = $false
 $directoryEvent = $null
@@ -54,27 +99,14 @@ if ($executionStageStarted -and (Test-Path $telemetryModule -PathType Leaf)) {
     Import-Module $telemetryModule -Force
     $scaffoldTelemetryEvent = Start-DeveloperEvent -ProjectPath $TargetBotPath -Category SCAFFOLDING -Subcategory total -Operation 'scaffolding.total'
 }
-trap {
-    $trappedError = $_
-    try {
-        if ($templateResolutionEvent -and -not $templateResolutionCompleted) { Stop-DeveloperEvent -ProjectPath $TargetBotPath -EventId $templateResolutionEvent.eventId -Status FAIL -Reason $trappedError.Exception.Message | Out-Null }
-        if ($directoryEvent -and -not $directoryEventCompleted) { Stop-DeveloperEvent -ProjectPath $TargetBotPath -EventId $directoryEvent.eventId -Status FAIL -Reason $trappedError.Exception.Message | Out-Null }
-        if ($scaffoldTelemetryEvent -and -not $scaffoldTelemetryCompleted) {
-            Stop-DeveloperEvent -ProjectPath $TargetBotPath -EventId $scaffoldTelemetryEvent.eventId -Status FAIL -Reason $trappedError.Exception.Message | Out-Null
-            $scaffoldTelemetryCompleted = $true
-        }
-    } catch {
-        # Telemetry is diagnostic and must not replace the authoritative scaffold failure.
-    }
-    throw $trappedError
-}
 
 function Test-UipCommand {
     param([string[]]$Arguments)
 
     $parentEventId = if ($templateResolutionEvent) { $templateResolutionEvent.eventId } elseif ($scaffoldTelemetryEvent) { $scaffoldTelemetryEvent.eventId } else { '' }
     $result = & $commandScript -FilePath $uipCommand -ArgumentList (@($Arguments) + '--help') -WorkingDirectory $TargetBotPath -TargetBotPath $TargetBotPath -ExecutionStatePath $executionStatePath -Operation 'UiPath CLI capability check' -Category SCAFFOLDING -Subcategory capability -ParentEventId $parentEventId -TimeoutSeconds 60 -Json | ConvertFrom-Json
-    return $result.status -eq 'PASS'
+    try { return Read-VerifiedCliHelp -Response $result -CommandPath ('uip ' + ($Arguments -join ' ')) }
+    catch { return $null }
 }
 
 function Invoke-UipJson {
@@ -93,8 +125,11 @@ function ConvertTo-TemplateList {
     } catch {
         throw "UiPath template search did not return valid JSON."
     }
-
     if ($parsed -is [System.Collections.IList]) { return @($parsed) }
+    if ($parsed.Result -and $parsed.Result -ne 'Success' -or $parsed.Error -or $parsed.Errors) {
+        throw 'UiPath template search returned an error response.'
+    }
+
     if ($parsed.PSObject.Properties.Name -contains 'Data') { return @($parsed.Data) }
     if ($parsed.PSObject.Properties.Name -contains 'data') { return @($parsed.data) }
     return @($parsed)
@@ -120,16 +155,18 @@ $searchArguments = $null
 $selectedTemplate = $null
 
 if ($ProjectType -eq 'REFramework') {
-    if (Test-UipCommand @('rpa','templates','search')) {
+    $searchHelp = Test-UipCommand @('rpa','templates','search')
+    if ($searchHelp) {
         $searchArguments = @('rpa','templates','search','--query',$(if ($TemplatePackageId) { $TemplatePackageId } else { 'REFramework' }),'--output','json')
-    } elseif (Test-UipCommand @('rpa','search-templates')) {
-        $searchArguments = @('rpa','search-templates','--query',$(if ($TemplatePackageId) { $TemplatePackageId } else { 'REFramework' }),'--output','json')
     } else {
-        throw 'The installed UiPath CLI cannot search project templates. REFramework creation is blocked.'
+        $searchHelp = Test-UipCommand @('rpa','search-templates')
+        if (-not $searchHelp) { throw 'The installed UiPath CLI cannot search project templates. REFramework creation is blocked.' }
+        $searchArguments = @('rpa','search-templates','--query',$(if ($TemplatePackageId) { $TemplatePackageId } else { 'REFramework' }),'--output','json')
     }
+    Assert-VerifiedCliOptions -Help $searchHelp -Option @('--query','--output')
 
     $search = Invoke-UipJson $searchArguments $(if ($templateResolutionEvent) { $templateResolutionEvent.eventId } else { '' })
-    if ($search.ExitCode -ne 0) {
+    if ($search.TimedOut -or $search.ExitCode -ne 0) {
         throw "UiPath template search failed with exit code $($search.ExitCode)."
     }
 
@@ -185,6 +222,13 @@ if ($ProjectType -eq 'Process') {
     }
 }
 
+$creationHelp = if ($usesInit) { $usesInit } else { $usesCreateProject }
+$requiredFlags = @('--name','--location','--target-framework','--expression-language','--output')
+if ($Description) { $requiredFlags += '--description' }
+if ($ProjectType -eq 'Process') { $requiredFlags += '--template-id' }
+else { $requiredFlags += '--template-package-id'; if ($TemplatePackageVersion) { $requiredFlags += '--template-package-version' } }
+Assert-VerifiedCliOptions -Help $creationHelp -Option $requiredFlags
+
 $stageStarted = $false
 $creationEvent = if ($detailedScaffoldTelemetry -and $scaffoldTelemetryEvent) { Start-DeveloperEvent -ProjectPath $TargetBotPath -Category SCAFFOLDING -Subcategory $(if ($ProjectType -eq 'Process') { 'blank_template_creation' } else { 'official_template_creation' }) -Operation $(if ($ProjectType -eq 'Process') { 'scaffolding.blank_template_creation' } else { 'scaffolding.official_template_creation' }) -ParentEventId $scaffoldTelemetryEvent.eventId } else { $null }
 $creationStatus = 'FAIL'
@@ -195,7 +239,7 @@ try {
         $stageStarted = $true
     }
     $created = Invoke-UipJson $createArguments $(if ($creationEvent) { $creationEvent.eventId } else { '' })
-    $creationStatus = if ($created.ExitCode -in @(0, 7)) { 'PASS' } else { 'BLOCKED' }
+    $creationStatus = if (-not $created.TimedOut -and $created.ExitCode -in @(0, 7)) { 'PASS' } else { 'BLOCKED' }
 }
 finally {
     if ($stageStarted) {
@@ -207,6 +251,9 @@ finally {
 }
 $projectJson = Join-Path $generatedProject 'project.json'
 
+if ($created.TimedOut) {
+    throw "UiPath scaffolding timed out. Staging preserved at $stagingContainer"
+}
 if ($created.ExitCode -notin @(0, 7)) {
     throw "UiPath scaffolding failed with unsupported exit code $($created.ExitCode). Staging preserved at $stagingContainer"
 }
@@ -224,7 +271,7 @@ try {
     throw "Generated project.json is invalid. Staging preserved at $stagingContainer"
 }
 
-$workflows = @(Get-ChildItem $generatedProject -Recurse -File -Filter '*.xaml')
+$workflows = @(Get-ChildItem $generatedProject -Recurse -File -Force -Filter '*.xaml')
 if ($workflows.Count -eq 0) {
     throw "UiPath scaffolding created no XAML workflow. Staging preserved at $stagingContainer"
 }
@@ -237,12 +284,15 @@ if ($detailedScaffoldTelemetry -and $scaffoldTelemetryEvent) {
     Add-DeveloperInstantEvent -ProjectPath $TargetBotPath -Category SCAFFOLDING -Subcategory devkit_activation -Operation 'scaffolding.devkit_activation' -ParentEventId $scaffoldTelemetryEvent.eventId -Status $(if (Test-Path (Join-Path $TargetBotPath '.rpa-ai') -PathType Container) { 'PASS' } else { 'SKIPPED' }) -Reason 'Activation is an upstream prerequisite; this event records its observed state without repeating activation.' | Out-Null
 }
 
+$generatedRootPrefix = $generatedProject.TrimEnd([System.IO.Path]::DirectorySeparatorChar, [System.IO.Path]::AltDirectorySeparatorChar) + [System.IO.Path]::DirectorySeparatorChar
 $semanticErrors = @()
 if ([string]$project.name -ne $ProjectName) { $semanticErrors += "name '$($project.name)'" }
 if ([string]$project.targetFramework -ne $TargetFramework) { $semanticErrors += "targetFramework '$($project.targetFramework)'" }
 if ([string]$project.expressionLanguage -ne $ExpressionLanguage) { $semanticErrors += "expressionLanguage '$($project.expressionLanguage)'" }
 if ([string]$project.designOptions.outputType -ne 'Process') { $semanticErrors += "outputType '$($project.designOptions.outputType)'" }
-if (-not $project.main -or -not (Test-Path (Join-Path $generatedProject ([string]$project.main)) -PathType Leaf)) {
+if (-not $project.main -or [IO.Path]::IsPathRooted([string]$project.main) -or
+    -not ([IO.Path]::GetFullPath((Join-Path $generatedProject ([string]$project.main)))).StartsWith($generatedRootPrefix, [StringComparison]::OrdinalIgnoreCase) -or
+    -not (Test-Path (Join-Path $generatedProject ([string]$project.main)) -PathType Leaf)) {
     $semanticErrors += "main entry point '$($project.main)'"
 }
 
@@ -259,8 +309,7 @@ if ($semanticErrors.Count -gt 0) {
     throw "Generated project does not match the approved scaffold: $($semanticErrors -join '; '). Staging preserved at $stagingContainer"
 }
 
-$generatedRootPrefix = $generatedProject.TrimEnd([System.IO.Path]::DirectorySeparatorChar, [System.IO.Path]::AltDirectorySeparatorChar) + [System.IO.Path]::DirectorySeparatorChar
-$generatedFileRecords = @(Get-ChildItem $generatedProject -Recurse -File | ForEach-Object {
+$generatedFileRecords = @(Get-ChildItem $generatedProject -Recurse -File -Force | ForEach-Object {
     if (-not $_.FullName.StartsWith($generatedRootPrefix, [System.StringComparison]::OrdinalIgnoreCase)) {
         throw "Generated file escapes the staging project: $($_.FullName)"
     }
@@ -291,7 +340,7 @@ try {
     foreach ($item in Get-ChildItem $generatedProject -Force) {
         $destination = Join-Path $TargetBotPath $item.Name
         $copiedPaths.Add($destination)
-        Copy-Item $item.FullName $destination -Recurse
+        Copy-Item $item.FullName $destination -Recurse -Force
     }
 
     foreach ($file in $generatedFileRecords) {
@@ -356,7 +405,7 @@ catch {
     throw "$($_.Exception.Message) Copied scaffold paths were rolled back. Staging preserved at $stagingContainer"
 }
 
-$requirementsResult = & $requirementsScript -Action InitializeNew -ProjectPath $TargetBotPath -ParentEventId $(if ($scaffoldTelemetryEvent) { $scaffoldTelemetryEvent.eventId } else { '' }) -DetailedTelemetry:$detailedScaffoldTelemetry -Json | ConvertFrom-Json
+$requirementsResult = & $requirementsScript -Action InitializeNew -ProjectPath $TargetBotPath -ParentEventId $(if ($scaffoldTelemetryEvent) { $scaffoldTelemetryEvent.eventId } else { '' }) -Json | ConvertFrom-Json
 if ($requirementsResult.status -ne 'PASS' -or -not $requirementsResult.folder.exists -or -not $requirementsResult.entryPoint.exists) {
     throw "Requirements workspace initialization did not complete. Project and staging are preserved at $TargetBotPath and $stagingContainer"
 }
@@ -366,31 +415,22 @@ if ($scaffoldTelemetryEvent) {
     Stop-DeveloperEvent -ProjectPath $TargetBotPath -EventId $scaffoldTelemetryEvent.eventId -Status PASS -Artifacts @([ordered]@{path=$evidencePath}) | Out-Null
     $scaffoldTelemetryCompleted = $true
 }
+$env:RPA_DEVKIT_TELEMETRY_LEVEL = $originalTelemetryLevel
 
 if ($Json) {
-    [pscustomobject][ordered]@{
-        schemaVersion = 1
-        status = 'PASS'
-        projectPath = $TargetBotPath
-        projectName = [string]$project.name
-        projectType = $ProjectType
-        targetFramework = [string]$project.targetFramework
-        expressionLanguage = [string]$project.expressionLanguage
-        entryPoint = [string]$project.main
-        generator = 'official UiPath CLI'
-        commandFamily = "uip rpa $createVerb"
-        template = $evidence.template
-        cliExitCode = $created.ExitCode
-        evidencePath = $evidencePath
-        requirementsPath = (Join-Path $TargetBotPath 'Requirements\REQUIREMENTS.md')
-        generatedFileCount = @($generatedFileRecords).Count
-        telemetryLevel = $TelemetryLevel
-    } | ConvertTo-Json -Depth 8
-} else {
-    Write-Host "[PASS] Created $ProjectType project '$ProjectName' in $TargetBotPath"
-    Write-Host "[PASS] Scaffold evidence: $evidencePath"
-    Write-Host "[PASS] Human-owned requirements workspace: $(Join-Path $TargetBotPath 'Requirements\REQUIREMENTS.md')"
-    if ($created.ExitCode -eq 7) {
-        Write-Host "[INFO] Accepted UiPath CLI partial-success exit $($created.ExitCode) after project structure and transfer hashes passed verification."
-    }
+    [ordered]@{
+        schemaVersion=1; contract='devkit.scaffold'; status='PASS'; projectPath=$TargetBotPath; evidencePath=$evidencePath
+        projectName=[string]$project.name; projectType=$ProjectType; targetFramework=[string]$project.targetFramework
+        expressionLanguage=[string]$project.expressionLanguage; entryPoint=[string]$project.main; generator='official UiPath CLI'
+        commandFamily="uip rpa $createVerb"; template=$evidence.template; cliExitCode=$created.ExitCode
+        requirementsPath=(Join-Path $TargetBotPath 'Requirements\REQUIREMENTS.md'); generatedFileCount=@($generatedFileRecords).Count
+        telemetryLevel=$TelemetryLevel; provenance=$evidence; capabilities=$creationHelp
+    } | ConvertTo-Json -Depth 7
+    return
+}
+Write-Host "[PASS] Created $ProjectType project '$ProjectName' in $TargetBotPath"
+Write-Host "[PASS] Scaffold evidence: $evidencePath"
+Write-Host "[PASS] Human-owned requirements workspace: $(Join-Path $TargetBotPath 'Requirements\REQUIREMENTS.md')"
+if ($created.ExitCode -eq 7) {
+    Write-Host "[INFO] Accepted UiPath CLI partial-success exit $($created.ExitCode) after project structure and transfer hashes passed verification."
 }

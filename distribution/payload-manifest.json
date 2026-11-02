@@ -133,6 +133,11 @@
       "ownership": "managed"
     },
     {
+      "source": "scripts/UiPathCliContract.psm1",
+      "destination": ".rpa-ai/scripts/UiPathCliContract.psm1",
+      "ownership": "managed"
+    },
+    {
       "source": "scripts/Invoke-DeveloperValidation.ps1",
       "destination": ".rpa-ai/scripts/Invoke-DeveloperValidation.ps1",
       "ownership": "managed"

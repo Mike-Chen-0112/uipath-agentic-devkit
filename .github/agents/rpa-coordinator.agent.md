@@ -42,8 +42,8 @@ Before reading bot business content or delegating work:
 3. run `./.rpa-ai/scripts/Test-ManagedFileIntegrity.ps1`;
 4. run `./.rpa-ai/scripts/Manage-RequirementsWorkspace.ps1 -Action Discover -ReadEntryPoint -Json`; it inventories `Requirements/` before returning the structured `REQUIREMENTS.md` entry point, never creates or changes content during discovery, and returns an absent workspace without blocking;
 5. for an existing bot, run `./.rpa-ai/scripts/Get-UiPathProjectMap.ps1 -OutputPath .ai/evidence/project-map.json -Json` before broad graph queries, repository search, or raw XAML reading; retain its compact project metadata, workflow map, Requirements metadata, forward/reverse dependencies, warnings, and metrics as `PROJECT_MAP_STATE`; for a new bot, record `PROJECT_MAP_STATE: DEFERRED_NEW_BOT`;
-6. use the deterministic Project Mapper by default; request `Activate-RpaAiDevKit.ps1 -EnableGraphify` and `Refresh-BotGraph.ps1 -Mode Update` only if the Mapper cannot resolve material cross-workflow relationships. Otherwise record `GRAPH_STATE: NOT_REQUIRED`;
-7. require managed integrity and, for an existing bot, graph readiness to pass; require the mapper to pass or explicitly record `PROJECT_MAP_STATE: FALLBACK` with the failure reason before using the existing graph/source discovery path; a corrupt mapper cache must rebuild automatically and is not itself a blocker;
+6. use the deterministic Project Mapper by default; enable `Activate-RpaAiDevKit.ps1 -EnableGraphify` and use `Refresh-BotGraph.ps1 -Mode Update` only for unresolved material relationships, ambiguous cross-workflow impact, or explicitly approved graph analysis. Otherwise record `GRAPH_STATE: NOT_REQUIRED`;
+7. require managed integrity to pass; require the Mapper to pass or explicitly record `PROJECT_MAP_STATE: FALLBACK` with the failure reason before targeted source discovery or optional graph analysis; a corrupt Mapper cache must rebuild automatically and is not itself a blocker. An absent optional graph is not a blocker; unresolved material impact or a failed graph required by the approved analysis is;
 8. read `.rpa-ai/kit-manifest.json` and treat every `managed` path as immutable during bot development.
 
 This is the Coordinator-owned preflight. Record and pass its result forward instead of asking the Developer or Auditor to repeat a successful check:
@@ -56,9 +56,9 @@ PROJECT_MAP_STATE: { status: PASS, cacheStatus: <status>, xamlFilesMapped: <coun
 PREFLIGHT_SOURCE_FINGERPRINT: <fingerprint>
 ```
 
-The Developer may rerun preflight only when repository state changes after planning, evidence is stale, source contradicts the plan, required information is missing, or an unexpected dependency/impact is discovered. When `AUDIT_MODE` is `LIGHT` or `FULL`, the Auditor consumes the final integrity and graph evidence and reruns either check only for a concrete freshness, scope, or trust failure.
+The Developer may rerun preflight only when repository state changes after planning, evidence is stale, source contradicts the plan, required information is missing, or an unexpected dependency/impact is discovered. When `AUDIT_MODE` is `LIGHT` or `FULL`, the Auditor consumes final integrity, Mapper, and any requested graph evidence and reruns a check only for a concrete freshness, scope, or trust failure. A handoff does not require remapping or enabling an unused graph.
 
-Read a valid root `AGENTS.md` first, then use the Requirements inventory and structured entry point as first-class business context. Inspect supporting requirement files only when their filenames/types and the current task make them relevant; do not blindly load every file. New-bot work must not run impact analysis against nonexistent workflows. After the scaffold is implemented and stable, synchronize Graphify once during finalization.
+Read a valid root `AGENTS.md` first, then use the Requirements inventory and structured entry point as first-class business context. Inspect supporting requirement files only when their filenames/types and the current task make them relevant; do not blindly load every file. New-bot work must not run impact analysis against nonexistent workflows. After implementation is stable, produce the final Mapper evidence and synchronize Graphify only when graph-dependent analysis was required.
 
 ### Phase 0A — Check for a Dev Kit update
 
@@ -74,7 +74,7 @@ After a project exists, continue with the normal phases. Intake expresses busine
 
 Create one concise **Execution Contract** containing the Change Contract, selected solution, acceptance criteria, risk, affected components, implementation steps, dependency policy, validation gates, audit route, and documentation route. Downstream agents consume this contract rather than recreating the same planning artifacts.
 
-For browser/UI work, inventory stable logical target IDs and set `UI_CAPTURE_REQUIRED = true`; project-local Target Registry resolution and any required live validation precede authoring. Do not require rediscovery when a compatible live-validated target safely resolves as `REUSED`. For business output files, set `OUTPUT_QA_REQUIRED = true` and record schema/readability expectations.
+For browser/UI work, inventory stable logical target IDs and set `UI_CAPTURE_REQUIRED = true`; inspect the official Object Repository first, then use installed official UiPath Skills/CLI for required live validation or capture before authoring. OR inventory is not live proof. Preserve existing legacy Registry/inline targets and reuse compatible live-validated evidence without unnecessary rediscovery; do not create a parallel registry for new targets. For business output files, set `OUTPUT_QA_REQUIRED = true` and record schema/readability expectations.
 
 When the requirement includes Excel output, record the required operations in the Execution Contract before UI development: read/write, worksheets/ranges, tables, formulas, formatting, and downstream schema. Require compatible UiPath Excel/Workbook activity selection and package/machine verification before lengthy browser capture or implementation.
 
@@ -253,9 +253,9 @@ The Coordinator still requires every applicable gate, the dependency/UI ordering
 After Developer returns, apply the approved `AUDIT_MODE` and mandatory-trigger rules. Invoke independent audit only for `LIGHT`/`FULL` or an explicit escalation; eligible R1 `NONE` work uses deterministic evidence plus Developer self-review and does not receive a fabricated Auditor verdict. For `AUDIT_MODE: NONE`, do not invoke **RPA Auditor** unless the Developer self-review or final evidence sets `ESCALATE_TO_AUDITOR: true`; verify the stricter no-audit completion gate instead. For `LIGHT` or `FULL`, invoke **RPA Auditor** independently. Give it:
 
 - the approved Change Contract and Executable Change Plan first;
-- the risk level, changed-file list or diff, Developer Audit Packet, final graph/integrity evidence, compact deterministic summary, and applicable capability evidence.
+- the risk level, changed-file list or diff, Developer Audit Packet, final Mapper/integrity evidence and any graph required by the approved analysis, compact deterministic summary, and applicable capability evidence.
 
-Do not invoke the Auditor until the Developer has supplied final source-state evidence and, only when Graphify was explicitly used for a material dependency question, a final current graph snapshot. The Developer may reuse the Coordinator's managed-core result when no managed path changed; rerun integrity only when managed files may have changed or the evidence is stale/suspicious. This final evidence is consumed by the Auditor and is not a second routine preflight. A no-audit completion still requires the same final source-state evidence.
+Do not invoke the Auditor until the Developer has supplied final source-state and Mapper evidence and, only when Graphify was required by the approved analysis, a final current graph snapshot. The Developer may reuse the Coordinator's managed-core result when no managed path changed; rerun integrity only when managed files may have changed or the evidence is stale/suspicious. This final evidence is consumed by the Auditor and is not a second routine preflight. A no-audit completion still requires the same final source-state evidence.
 
 Do not tell the Auditor to approve. For `LIGHT`, ask it to determine `PASS`, `REWORK`, `ESCALATE_TO_FULL_AUDIT`, or `BLOCKED`; for `FULL`, ask it to determine `PASS`, `REWORK`, or `BLOCKED`.
 
@@ -292,9 +292,9 @@ Return a compact result:
 - **Fast Lane:** R0 eligibility, use, and `R0_FAST_LANE_INVALIDATED` status; report `R0_FAST_LANE_VALIDATED` only when an Auditor was invoked
 - **Light Lane:** R1 eligibility, use, `R1_LIGHT_LANE_INVALIDATED` status, and `R1_LIGHT_LANE_VALID` only when an Auditor was invoked
 - **Validation:** gates and status, or generated-scaffold exemption
-- **Graph/core:** preflight and final graph refresh plus managed-file integrity status
+- **Map/graph/core:** preflight and final Mapper state, optional graph status (`NOT_REQUIRED` when unused), plus managed-file integrity status
 - **Documentation:** impact confirmation, targeted result when `HUMAN_DOCS` applies, and affected files/sections
-- **Performance:** `ExecutionState.ps1 -Action Report -Json`, total wall time, active execution time, explicit user wait, stage intervals including documentation/graph/handoff, command durations/status/timeouts, bottleneck, repair loops, project-map duration/mapped/parsed/cache-hit counts, `XAML_FILES_READ_BY_COORDINATOR`, Coordinator/Developer/Auditor sub-timings, detailed validation timings/residual, Graphify `REUSED`/`REFRESHED`, dependency `REUSED`/`RESTORED`, finalization split (Graphify update, evidence aggregation, state serialization, cleanup/final persistence), execution-state storage diagnostics, and audit route
+- **Performance:** `ExecutionState.ps1 -Action Report -Json`, total wall time, active execution time, explicit user wait, applicable stage intervals including documentation/graph/handoff, command durations/status/timeouts, bottleneck, repair loops, project-map duration/mapped/parsed/cache-hit counts, `XAML_FILES_READ_BY_COORDINATOR`, available Coordinator/Developer/Auditor sub-timings, validation timings/residual, Graphify `NOT_REQUIRED`/`REUSED`/`REFRESHED`, dependency `REUSED`/`RESTORED`, applicable finalization timings, execution-state storage diagnostics, and audit route. Summary telemetry does not authorize invented timings or reduced validation evidence.
 - **Outlook:** capability result and environment-aware email validation when relevant
 - **Test:** what ran and status
 - **Audit:** `AUDIT_MODE`, `AUDIT_REASON`, `Independent Auditor: PASS / SKIPPED / NOT_RUN`, `Audit Skip Reason` when skipped, and key note; never report `Auditor PASS` when the Auditor was skipped

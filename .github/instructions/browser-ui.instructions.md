@@ -5,23 +5,23 @@ description: Use when the requested change includes browser or visible UI intera
 
 These rules apply whenever the requested behavior includes browser UI interaction: open/navigate, click, type, select, hover, submit, upload/download through UI, read/get text/get attribute, extract data, check element/app state, or any other visible-page action.
 
-## Official Object Repository first; legacy Registry fallback
+## Official Object Repository first; legacy Target Registry resolution gate
 
-Start with `.rpa-ai/scripts/Get-OfficialObjectRepository.ps1 -ApprovedDevelopment -NonSensitiveDevelopmentData -Json` to inspect the current project's official OR without persisting a second store. The OR inventory is not live proof. Use the installed UiPath UIA skill/CLI to validate or capture each target before authoring. Only invoke the legacy `Resolve-UiTarget.ps1` for an existing Registry/inline-selector workflow; do not create a parallel registry for a new target.
+Start with `.rpa-ai/scripts/Get-OfficialObjectRepository.ps1 -ApprovedDevelopment -NonSensitiveDevelopmentData -Json` to inspect the current project's official OR without persisting a second store. The OR inventory is not live proof: `INVENTORY_UNVERIFIED` never satisfies `UI_CAPTURE_COMPLETE`. Use the installed official UiPath UIA Skills/CLI to validate or capture each target before authoring. Invoke legacy `Resolve-UiTarget.ps1` only for existing Registry/inline-selector workflows; preserve their `.devkit/ui-targets/registry.json` and do not create a parallel registry for new targets. Missing official inventory tooling must be diagnosed, not silently replaced with a custom store.
 
-Official-first sequence: OR inventory -> live validation of a compatible OR target -> official UIA capture/configuration/improvement for unresolved targets. Legacy projects may use the existing bounded Registry selector hierarchy only as a compatibility fallback. Do not invent selector strings or treat a CLI success code as a live UI proof.
+Official-first sequence: OR inventory -> live validation of a compatible OR target -> official UIA capture/configuration/improvement for unresolved targets. For existing legacy targets only, retain the bounded capability- and context-aware hierarchy: validated registry target -> existing Object Repository reference -> strict selector -> DOM selector -> anchor-assisted selector -> fuzzy selector -> semantic DOM -> semantic image/Computer Vision -> image -> coordinate last resort. Native windows omit DOM strategies. `Get-UiTargetCapabilities.ps1` and `Get-UiTargetQuality.ps1` remain compatibility helpers, not a reason to introduce a new strategy ladder or upgrade packages. Do not invent selectors or treat a CLI success code as live UI proof.
 
-Treat `REUSED` or live-validated `RESOLVED` as target-resolution completion. `VALIDATION_REQUIRED`, `BLOCKED_UI_CAPTURE`, and `UNRESOLVED_TARGET` never authorize UI authoring. A static `PASS` is not live proof. Record the resolver evidence path, reuse result, quality, validation level, application/page context, attempts, fallback reason, and warnings. Referenced screenshots are size-capped and hashed; never copy their bytes into execution state.
+For legacy resolution, treat compatible live-validated `REUSED` or live-validated `RESOLVED` as target-resolution completion. `VALIDATION_REQUIRED`, `BLOCKED_UI_CAPTURE`, and `UNRESOLVED_TARGET` never authorize UI authoring. A static `PASS` is not live proof. Record official OR inventory and live-validation evidence, or the legacy resolver evidence path, with reuse result, quality, validation level, application/page context, attempts, fallback reason, and warnings. Referenced screenshots are size-capped and hashed; never copy their bytes into execution state.
 
 Authority is: live validated UI > valid deterministic selector/target > registry metadata > semantic interpretation > historical evidence. A registry entry is reusable evidence, not permanent truth. Revalidate or rediscover when live validation fails, application/page or UI Automation capability changes, the target definition changes, the registry schema changes, or the user explicitly requests rediscovery.
 
 ### Screen-level resolution and capture
 
-Inventory targets by screen state before exploration. Prefer one official OR inventory per project/session; use the installed official UiPath UIA skills/CLI to capture and validate unresolved targets. For pre-existing Registry targets only, `Resolve-UiTargets.ps1` can batch legacy compatibility checks. Neither inventory nor batching supplies live target proof.
+Inventory targets by screen state before exploration. Reuse one official OR inventory per project/session while its source and context remain valid; use installed official UiPath UIA Skills/CLI to validate or capture unresolved targets. For pre-existing Registry targets only, `.rpa-ai/scripts/Resolve-UiTargets.ps1 -TargetsJson <compact array> -Domain <domain> -Page <page> -Json` can batch legacy checks, return accepted bindings, and preserve per-target evidence. A missing target remains blocked; neither inventory nor batching supplies live proof.
 
 Attach to the approved Chrome window once per required screen context. Reuse the current UiPath snapshot only while its screen state and references remain valid. Capture and prove all unresolved targets visible in that state before navigating away; do not repeat a full snapshot for each target. Refresh after navigation, modal changes, rerendering, stale references, or another invalidating state change. State-changing actions stay sequential; batching resolution does not authorize parallel clicks.
 
-Use returned bindings instead of rereading the registry. Capability analysis is reused within the PowerShell process only after dependency, documentation-content, and Object Repository state checks; it is not cached live-target proof. Static-to-live validation progression is allowed for the same definition, but equivalent failed attempts remain blocked. Record actual UIA subprocess duration separately from resolver candidate-processing duration; neither a batch timer nor supplied validation milliseconds represents end-to-end task time.
+Use returned official OR bindings, or accepted legacy bindings instead of rereading the registry. Legacy capability analysis is reused within the PowerShell process only after dependency, documentation-content, and Object Repository state checks; it is not cached live-target proof. Static-to-live validation progression is allowed for the same definition, but equivalent failed attempts remain blocked. Record actual UIA subprocess duration separately from any legacy resolver candidate-processing duration; neither a batch timer nor supplied validation milliseconds represents end-to-end task time.
 
 ## Browser and implementation defaults
 
@@ -36,7 +36,7 @@ The moment a requirement contains any browser UI action, set `UI_CAPTURE_REQUIRE
 
 **No workflow/code authoring for that UI step may begin until `UI_CAPTURE_COMPLETE = true`.** Reading the minimum context/config needed to find the Development URL and understand the intended screen is allowed; editing XAML, coded workflows, Object Repository consumer code, or Python implementation logic is not.
 
-The official OR inventory is the first noninteractive targeting action. Opening/attaching to the live Development UI remains mandatory for target proof, and an absent OR entry does not authorize guessing a selector.
+Do not wait for a reminder. Official OR inventory is the first noninteractive targeting action; opening/attaching to the live Development UI follows for required proof or discovery. Compatible live-validated evidence may be reused only while its context remains valid. An absent OR entry never authorizes guessing a selector.
 
 ## Target binding and stale-target recovery
 
@@ -44,12 +44,12 @@ Normal sequence: establish the current screen state -> capture/resolve the inten
 
 On a stale-reference or target-not-found error:
 
-1. Record failed validation through `Resolve-UiTarget.ps1 -ReuseValidationStatus FAIL`; never retry the same target/strategy with equivalent input.
-2. Let the resolver advance to the next supported strategy within the configured exploration budget.
-3. Obtain a fresh snapshot only when registry reuse and cheaper deterministic strategies cannot settle the target.
+1. Record the failed official target validation, or use `Resolve-UiTarget.ps1 -ReuseValidationStatus FAIL` for a legacy target; never retry the same target/strategy with equivalent input.
+2. Follow the installed official UIA improvement procedure; for a legacy target, retain the resolver's bounded supported fallback.
+3. Obtain a fresh snapshot when current target references or screen state are invalid; inventory and historical metadata never override a live failure.
 4. Resolve the intended element by meaning and surrounding context, then link/configure it using the supported UiPath tooling documented by the installed skill.
 5. Inspect the resulting XAML diff for unintended argument, variable, namespace, or invocation-contract changes.
-6. Validate the fresh target again with the intended activity and persist it as `REUSABLE` only after live `PASS`.
+6. Validate the fresh target with the intended activity before official OR reuse; persist legacy status as `REUSABLE` only after live `PASS`.
 
 If one fresh-capture recovery fails, diagnose before another attempt: wrong window, wrong UI technology, wrong element, missing browser integration, or unsupported descriptor. Do not invent CLI commands or flags. Record the selected browser, screen, target, and failure/recovery reason in the existing UI evidence; do not create a separate document for each element.
 
@@ -72,12 +72,12 @@ For each browser UI task, execute this sequence in order:
 1. **Recognize UI work.** List the business UI steps and targets: e.g. `Type Case ID -> SearchField`, `Click -> SearchButton`, `Read -> StatusLabel`.
 2. **Load the official UiPath RPA/UIA procedure.** Invoke/read the installed `uipath-rpa` skill and, for UiPath UIA work, the installed package guide under `.local/docs/packages/UiPath.UIAutomation.Activities/` when present. The installed guide/CLI is authoritative.
 3. **Resolve the Development entry point.** Get the approved Development URL/application from `.ai/context/`, config, or current source. Never use Production.
-4. **Resolve registered targets first.** Run the deterministic resolver for every logical target with browser/application/domain/page context. Do not open an inspector merely because inspection is available.
+4. **Inventory official OR targets first.** Query the current project's official OR and identify compatible target references; inventory is not live proof. Run the existing deterministic resolver only for legacy Registry/inline targets. Do not open an inspector merely because inspection is available.
 5. **Choose and open/attach when live validation or discovery is required.** Default to Chrome unless an explicit exception applies. If no suitable Development Chrome window is open, launch it; otherwise attach/reuse it.
 6. **Establish screen state.** Navigate only as far as required to validate or discover unresolved targets. Use non-sensitive Development test data. Do not type credentials; reuse an approved authenticated session or stop if authentication is unavailable.
 7. **Validate reuse or capture/configure unresolved targets.** Use UiPath target validation/configuration, Object Repository, or indication tooling described by the installed `uipath-rpa` skill. Keep browser DOM and native dialogs as separate contexts.
 8. **Prove each new target.** Perform a safe interaction/read against each newly captured target. Static selector inspection cannot be recorded as live validation.
-9. **Record compact targeting evidence.** Record target ID/name, page/screen, strategy, quality, validation method/level, uniqueness/role result, reuse/fallback result, and referenced artifact hash/size.
+9. **Record compact targeting evidence.** Record official OR inventory status separately from live proof, target ID/name, page/screen, strategy, quality, validation method/level, uniqueness/role result, reuse/fallback result, and referenced artifact hash/size. Include legacy registry evidence only when that compatibility path was used.
 10. Set `UI_CAPTURE_COMPLETE = true` only when all required targets resolve as validated reusable targets or newly live-proven targets.
 11. **Only now author/edit the workflow.** Bind activities to the resolved UiPath descriptors/targets, or use the proven Python locators if the final implementation itself is Python.
 
@@ -107,9 +107,9 @@ Before non-help UIA execution, use the existing environment gate with `Get-UiPat
 
 All non-help operations are conservatively side-effecting and sequential, including reads that may initialize UIA. Timeout is **not cancellation** for a side-effecting process: inspect the returned process ID and do not launch another interaction until the first is settled. Use only non-sensitive Development data; the shared runner records official output in referenced command logs. Never pass credentials/tokens, capture sensitive pages, or copy DOM/screenshots/output into state. Follow official output-file options from current help and retain compact path/hash/size artifact references only.
 
-`CAPABILITY_AVAILABLE` means only recognized CLI help ran. `EXECUTED_UNVERIFIED` means only the official subprocess completed with nonempty output; **unknown output is not success**. Empty/error-bearing/unavailable results are `BLOCKED_UI_CAPTURE`. Neither adapter status, supplied `PASS`, nor file existence sets `UI_CAPTURE_COMPLETE`. Inspect the actual official output/artifacts according to the installed package's result contract, verify the generated UiPath descriptor and intended activity in Development, then submit that evidence to the existing resolver/registration flow. Compatible targets remain reuse-first. No approved Development application/session means no live capture, no invented target and no business UI authoring; central adapter/control-test changes do not require creating a business bot.
+`CAPABILITY_AVAILABLE` means only recognized CLI help ran. `EXECUTED_UNVERIFIED` means only the official subprocess completed with nonempty output; **unknown output is not success**. Empty/error-bearing/unavailable results are `BLOCKED_UI_CAPTURE`. Neither adapter status, supplied `PASS`, nor file existence sets `UI_CAPTURE_COMPLETE`. Inspect official output/artifacts according to the installed package's result contract and verify the generated UiPath descriptor and intended activity in Development before accepting official OR bindings. Submit evidence to the existing resolver/registration flow only for legacy targets. Compatible live-validated targets remain reuse-first. No approved Development application/session means no live capture, no invented target and no business UI authoring; central adapter/control-test changes do not require creating a business bot.
 
-For UI workflow execution, follow the installed `uia-starter-guide.md`: record window baseline, use the official `uip rpa debug start` (not `run`), inspect suspension/errors, cancel the execution and close only workflow-created windows after diffing against baseline. Route debug/cancel through `Resolve-DevKitTool.ps1` and `Invoke-DevKitCommand.ps1` as separate side-effecting operations with precise evidence; they are not `uia` child commands and are not routed by this adapter. On selector failure, first report reuse `FAIL` to the existing resolver, then follow the package's improve-selector recovery/staging/write-back procedure; inspect the XAML diff and re-prove the intended activity. Missing official skill/package guide/CLI capability returns `BLOCKED`, never a Python/Playwright fallback or automatic upgrade.
+For UI workflow execution, follow the installed `uia-starter-guide.md`: record window baseline, use the official `uip rpa debug start` (not `run`), inspect suspension/errors, cancel the execution and close only workflow-created windows after diffing against baseline. Route debug/cancel through `Resolve-DevKitTool.ps1` and `Invoke-DevKitCommand.ps1` as separate side-effecting operations with precise evidence; they are not `uia` child commands and are not routed by this adapter. On selector failure, record the failed proof (also report reuse `FAIL` to the resolver for legacy targets), then follow the package's improve-selector recovery/staging/write-back procedure; inspect the XAML diff and re-prove the intended activity. Missing official skill/package guide/CLI capability returns `BLOCKED`, never a Python/Playwright fallback or automatic upgrade.
 
 Python may inspect the DOM as supplemental diagnostics, but it cannot satisfy `UI_CAPTURE_COMPLETE` for a UiPath implementation by itself.
 
@@ -129,7 +129,7 @@ For Python locators:
 
 A target is accepted only if all are true:
 
-- captured from the live Development UI or safely reused from a compatible live-validated registry entry;
+- captured from the live Development UI or safely reused from a compatible live-validated official OR target or legacy registry entry;
 - corresponds to the intended business element;
 - resolves in the relevant screen state;
 - does not depend on obviously volatile/session-specific attributes unless no stable alternative exists and the risk is documented;
@@ -181,7 +181,8 @@ Before the first source edit for a UI task, the Developer's working evidence mus
 - `UI_CAPTURE_REQUIRED: true`
 - `BROWSER_OPENED_OR_ATTACHED: true / N/A_REUSED_VALIDATED_TARGET`
 - `CAPTURED_TARGETS: <count>/<required count>`
-- one record per target: stable ID, business name, action, screen/page, registry reuse result, strategy, quality, validation level/method, descriptor summary, proof result, fallback/warnings
+- official OR inventory status and evidence reference, explicitly separate from live capture proof
+- one record per target: stable ID, business name, action, screen/page, OR or legacy registry reuse result, strategy, quality, validation level/method, descriptor summary, proof result, fallback/warnings
 - `UI_CAPTURE_COMPLETE: true`
 
 If any field is missing or false, the Coordinator must not authorize authoring and the Auditor must not PASS the change.

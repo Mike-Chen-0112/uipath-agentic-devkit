@@ -3,6 +3,7 @@ param(
     [string]$TargetBotPath = (Get-Location).Path,
     [string]$SkillPath = (Join-Path $env:USERPROFILE '.copilot\skills\uipath-rpa\SKILL.md'),
     [string]$CommandName,
+    [switch]$ObjectRepositoryInventory,
     [string[]]$ArgumentList = @(),
     [ValidateSet('capability','snapshot','navigate','live_capture','target_capture','target_generation','target_validation','selector_inspection','target_query','activity_link','native_interaction')]
     [string]$Subcategory = 'capability',
@@ -18,6 +19,7 @@ param(
 # A process exit code, JSON status, or an existing artifact is never live target proof.
 $ErrorActionPreference = 'Stop'
 $result = [ordered]@{
+    schemaVersion = 1; contract = 'devkit.official-ui'; inventory = @()
     status = 'BLOCKED_UI_CAPTURE'; reason = ''; tool = $null
     category = 'UIA'; subcategory = $Subcategory; commands = @()
     guide = $null; prerequisiteVersion = $null; installedVersion = $null; prerequisiteDocuments = @()
@@ -219,7 +221,21 @@ try {
     $TargetBotPath = (Resolve-Path -LiteralPath $TargetBotPath).Path
     . (Join-Path $PSScriptRoot 'Resolve-DevKitTool.ps1')
     $result.tool = Resolve-DevKitTool -Name uip -TargetBotPath $TargetBotPath -Required
-    if (-not $CommandName) {
+    if ($ObjectRepositoryInventory) {
+        if ($CommandName -or $ArgumentList.Count) { throw 'INVENTORY_DOES_NOT_ACCEPT_UI_COMMANDS' }
+        if (-not $ApprovedDevelopment -or -not $NonSensitiveDevelopmentData) { throw 'APPROVED_NON_SENSITIVE_DEVELOPMENT_CONTEXT_REQUIRED' }
+        if (-not (Test-Path (Join-Path $TargetBotPath 'project.json') -PathType Leaf)) { throw 'BUSINESS_PROJECT_REQUIRED' }
+        $result.category = 'OBJECT_REPOSITORY'
+        $inventoryParameters = @{
+            TargetBotPath=$TargetBotPath; ApprovedDevelopment=$ApprovedDevelopment
+            NonSensitiveDevelopmentData=$NonSensitiveDevelopmentData; TimeoutSeconds=$TimeoutSeconds
+        }
+        $officialInventory = & (Join-Path $PSScriptRoot 'Get-OfficialObjectRepository.ps1') @inventoryParameters
+        $result.commands = @($officialInventory.commands)
+        $result.inventory = @($officialInventory.repository.Data)
+        $result.status = 'INVENTORY_UNVERIFIED'
+        $result.reason = 'Ephemeral official inventory only; resolve compatible references and prove every intended activity in Development.'
+    } elseif (-not $CommandName) {
         if ($ArgumentList.Count) { throw 'ARGUMENTS_REQUIRE_A_DOCUMENTED_COMMAND' }
         $help = Invoke-OfficialCommand -Tokens @('rpa','uia','--help','--output','json') -Kind capability -Mutating $false
         $inventory = Read-OfficialHelp -Response $help
@@ -321,7 +337,7 @@ try {
         if ($command.error -or [string]::IsNullOrWhiteSpace($command.output)) { throw 'OFFICIAL_RESULT_EMPTY_OR_ERROR_BEARING' }
         if ($command.output -match '(?im)^\s*(error|exception|failed)\b' -or
             $command.output -match '(?i)"success"\s*:\s*false' -or
-            $command.output -match '(?i)"status"\s*:\s*"(error|failed|failure)"' -or
+            $command.output -match '(?i)"(result|status)"\s*:\s*"(error|failed|failure)"' -or
             $command.output -match '(?i)"errors?"\s*:\s*(?!null\b|\[\s*\]|""\s*[,}])\S') {
             throw 'OFFICIAL_RESULT_ERROR_BEARING'
         }
@@ -331,4 +347,4 @@ try {
 } catch {
     $result.reason = $_.Exception.Message
 }
-if ($Json) { $result | ConvertTo-Json -Depth 8 } else { [pscustomobject]$result }
+if ($Json) { $result | ConvertTo-Json -Depth 64 } else { [pscustomobject]$result }

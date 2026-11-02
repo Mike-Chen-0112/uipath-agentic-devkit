@@ -1,6 +1,6 @@
 # UI Capture Protocol
 
-This protocol prevents guessed selectors and repeated rediscovery. Resolve compatible live-validated project-local targets before opening an inspector, then capture only unresolved targets, screen by screen.
+This protocol prevents guessed selectors and repeated rediscovery. Inspect official Object Repository inventory first, then obtain live UiPath proof screen by screen. Preserve validated reuse for existing legacy Registry/inline targets.
 
 ## Trigger
 
@@ -27,7 +27,7 @@ Resolve Development entry point
 READ official Object Repository via read-only CLI inventory
         |
         v
-Validate/reuse compatible target? ---- yes ----> record compact reuse evidence
+Live-validate/reuse compatible target? ---- yes ----> record live proof
         | no
         v
 OPEN / ATTACH CHROME  <--- default for live validation/discovery
@@ -56,11 +56,13 @@ Validate / debug / recover selectors if needed
 
 ## Hard rule
 
-No UI authoring is permitted between `UI_CAPTURE_REQUIRED = true` and `UI_CAPTURE_COMPLETE = true`. Start with the official OR CLI inventory (`Get-OfficialObjectRepository.ps1`), then follow official UIA skills/CLI to obtain live target proof. OR inventory alone never authorizes UI authoring. For legacy Registry/inline targets, retain the existing `Resolve-UiTarget.ps1` and `Resolve-UiTargets.ps1` validation gates.
+No UI activity/selector authoring is allowed between `UI_CAPTURE_REQUIRED = true` and `UI_CAPTURE_COMPLETE = true`. Start with official Object Repository inventory through `Get-OfficialObjectRepository.ps1`, then follow official UIA skills/CLI for live validation or capture. Inventory alone never authorizes UI authoring. For legacy Registry/inline targets, retain `Resolve-UiTarget.ps1` and `Resolve-UiTargets.ps1`: only a compatible live-proven `REUSED` or `RESOLVED` target satisfies the per-target gate. `VALIDATION_REQUIRED`, `BLOCKED_UI_CAPTURE`, and `UNRESOLVED_TARGET` do not authorize authoring.
 
-## Official-first Object Repository and legacy Registry
+## Official-first inventory and legacy registry
 
-`.devkit/ui-targets/registry.json` is created on demand. Entries contain stable IDs, normalized web/native context, strategy and descriptor or Object Repository reference, anchors/fallbacks, deterministic quality, live/static validation distinction, capability fingerprint, source locations, warnings, and hashes. Screenshots are optional size-capped references, never inline state data.
+`Get-OfficialObjectRepository.ps1 -ApprovedDevelopment -NonSensitiveDevelopmentData -Json` provides ephemeral, read-only inventory for an existing Development project. It excludes referenced UI Libraries and returns `INVENTORY_UNVERIFIED`, `liveProof: NOT_VERIFIED`, and `captureCompletionAuthority: false`. Live validation has not been performed and `UI_CAPTURE_COMPLETE` remains false. Do not persist sensitive repository descriptors or interpret command success as target proof.
+
+Do not delete or silently migrate legacy Registry/inline targets, and do not create a parallel Selector Registry for new targets. The legacy resolver creates `.devkit/ui-targets/registry.json` on demand when that compatibility path is used. Entries contain stable IDs, normalized web/native context, strategy and descriptor or Object Repository reference, anchors/fallbacks, deterministic quality, live/static validation distinction, capability fingerprint, source locations, warnings, and hashes. Screenshots are optional size-capped references, never inline state data.
 
 The resolver deduplicates equivalent definitions and attempts, enforces the configured exploration budget, and emits `UNRESOLVED_TARGET` or `BLOCKED_UI_CAPTURE` instead of looping. Application/domain/route, target fingerprint, registry schema, and UI Automation capability changes invalidate fast reuse. Query strings and fragments are removed from page identity where safe.
 
@@ -74,7 +76,7 @@ A captured target can still fail at runtime if the workflow uses it badly. When 
 
 Capability analysis is cached within the PowerShell process for each project. The cache checks UI Automation dependency presence/version, hashes of selected local documentation contents, and Object Repository existence. Changed inputs invalidate the cache. Cached capability facts are not live target proof.
 
-Default targeting route: official OR inventory -> official live validation -> official UIA capture/improve when needed. The old Registry strategy ladder remains available for existing legacy target definitions only; native dialogs require native capture and are not DOM targets.
+Default route: official Object Repository inventory -> official live validation -> official UIA capture/improve when needed. For existing legacy definitions only, retain the resolver hierarchy: registry -> Object Repository -> strict selector -> DOM selector -> anchor -> fuzzy -> semantic DOM -> semantic image/CV -> image -> coordinates. Native dialogs need native capture and omit DOM strategies. Coordinates remain non-reusable last-resort evidence.
 
 ## UiPath vs Python
 
@@ -84,11 +86,11 @@ For a deliberately Python-based browser implementation, capture/prove the real D
 
 ### Official UI automation adapter
 
-`scripts/Get-OfficialObjectRepository.ps1` provides read-only, ephemeral official OR inventory under Development/non-sensitive gates and never provides live proof. It excludes referenced UI Libraries. `scripts/Invoke-UiPathUiAutomation.ps1` in the central DevKit is a thin transport adapter, not a capture or selector-proof authority; current official Skill and CLI Help remain authoritative.
+`scripts/Get-OfficialObjectRepository.ps1` provides inventory only, without live-proof authority. `scripts/Invoke-UiPathUiAutomation.ps1` in the central DevKit is a thin transport adapter, not a capture or selector-proof authority. It resolves the official tool through `Resolve-DevKitTool.ps1` and records command execution through `Invoke-DevKitCommand.ps1`. Use the installed official skill, the project-specific package guide, and current command help for supported operations and arguments; do not turn skill names into guessed CLI commands.
 
 Non-help execution requires an approved Development project, non-sensitive Development data, explicit side-effect approval, a resolvable UI Automation dependency meeting the installed skill's prerequisite, and the project-specific `.local/docs/packages/UiPath.UIAutomation.Activities/ui-automation-guide.md`. Missing prerequisites block execution; the adapter does not upgrade packages automatically.
 
-`CAPABILITY_AVAILABLE` establishes help availability only. `EXECUTED_UNVERIFIED` means a command ran, not that its artifacts are correct or a target is live-validated. The adapter retains `liveProof=NOT_VERIFIED` and `captureCompletionAuthority=false`. Inspect official results/artifacts, follow the package guide for activity binding or recovery, and satisfy the existing per-target resolver gates before authoring. Command exit zero, a JSON status, or an existing artifact cannot set `UI_CAPTURE_COMPLETE = true`. No live UI pilot or measured speedup is established by this integration.
+`CAPABILITY_AVAILABLE` establishes help availability only. `EXECUTED_UNVERIFIED` means a command ran, not that its artifacts are correct or a target is live-validated. The adapter retains `liveProof=NOT_VERIFIED` and `captureCompletionAuthority=false`. Inspect official results/artifacts and obtain per-target live proof before authoring; legacy targets must also satisfy their existing resolver gates. Command exit zero, a JSON status, or an existing artifact cannot set `UI_CAPTURE_COMPLETE = true`. No live UI pilot or measured speedup is established by this integration.
 
 ## Multi-screen flows
 
@@ -96,7 +98,7 @@ Capture screen-by-screen. Attach once per needed Development browser context. Re
 
 The agent may author a screen only after all targets for that screen are captured/proven. It must not invent later-screen selectors from prose.
 
-### Compact screen-batch invocation
+### Legacy screen-batch invocation
 
 In an activated bot project, pass a compact JSON array to the wrapper:
 

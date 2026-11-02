@@ -1,4 +1,4 @@
-# RPA AI Dev Kit v0.11.8
+# RPA AI Dev Kit v0.12.2
 
 This repository contains an AI-assisted UiPath Development kit. Production access and deployment are not permitted.
 
@@ -11,7 +11,7 @@ This repository contains an AI-assisted UiPath Development kit. Production acces
    ./.rpa-ai/scripts/Activate-RpaAiDevKit.ps1
    ```
 
-   It discovers tools already installed in your Windows profile. When needed, it downloads verified portable Node.js/npm and `uv`, installs the UiPath CLI/skills and pinned Graphify for the current user, and runs diagnostics. No administrator access or `PATH` change is required.
+   It discovers tools already installed in your Windows profile. When needed, it downloads verified portable Node.js/npm, installs the UiPath CLI/skills for the current user, restores existing project dependencies, and runs diagnostics. Graphify is optional: `-EnableGraphify` installs/enables it when graph analysis is needed; `-InstallGraphify` installs it only. Default activation does not probe Graphify or parse old graph files. No administrator access or `PATH` change is required.
 
 3. Wait for the **RPA AI DEV KIT IS READY** banner.
 4. Open this repository in VS Code and select **RPA Coordinator** in Copilot Chat.
@@ -38,7 +38,9 @@ The Coordinator maps the project before broad source discovery, and the Develope
 2. Select **RPA Coordinator** and ask it to read the intake, create a Process or REFramework project, and implement the Development-safe requirement.
 
 The agent must create the UiPath project with official `uip rpa` scaffolding. It must not hand-write `project.json` or starter XAML. Successful initialization creates `Requirements/REQUIREMENTS.md` when missing and preserves anything already present there.
-New-bot routing checks for `project.json` first, defers repository impact analysis and Graphify discovery until the scaffold is stable, and performs one final graph synchronization after implementation.
+New-bot routing checks for `project.json` first and maps source after the scaffold is stable. Graphify is optional for unresolved material relationships, ambiguous cross-workflow impact, or approved graph analysis; synchronize it only when that analysis requires it.
+
+The scaffold helper supports schema-v1 `devkit.scaffold` requests with `-RequestJson` and `PASS`/`FAIL` responses with `-Json`. Telemetry defaults to `Summary`; `-TelemetryLevel Detailed` is opt-in. Scaffold success is not a verified business workflow. These interfaces retain the existing approval and validation workflow.
 
 ## Boundaries
 
@@ -46,7 +48,8 @@ New-bot routing checks for `project.json` first, defers repository impact analys
 - Do not store credentials, tokens, or secret values in intake, context, prompts, screenshots, graph data, or evidence.
 - `Requirements/` is human-owned; agents may read it but cannot silently modify, move, delete, or generate artifacts in it. `.ai/intake/`, `.ai/context/`, `.ai/evidence/`, `.ai/feedback/`, UiPath source, and bot configuration are bot-owned.
 - Files listed as managed in `.rpa-ai/kit-manifest.json` are read-only during bot development.
-- Graphify runs locally in code-only mode. Approved downloads may come in; bot content must not leave through Graphify or another third-party library.
+- Inspect official Object Repository inventory before live UI discovery. Inventory alone is unverified and cannot complete UI capture; preserve existing legacy Registry/inline targets without creating a parallel registry for new targets.
+- When requested, Graphify runs locally in code-only mode. Approved downloads may come in; bot content must not leave through Graphify or another third-party library.
 
 Bot documentation is kept in `README.md`, `docs/Bot-Documentation.md`, `docs/Testing.md`, and `docs/CHANGELOG.md`.
 

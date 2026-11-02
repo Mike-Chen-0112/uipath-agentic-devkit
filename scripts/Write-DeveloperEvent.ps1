@@ -21,10 +21,12 @@ param(
     [string]$HashBefore = '',
     [string]$HashAfter = '',
     [string]$NowUtc,
+    [ValidateSet('Summary','Detailed')][string]$TelemetryLevel,
     [switch]$Json
 )
 $ErrorActionPreference='Stop'
 Import-Module (Join-Path $PSScriptRoot 'DeveloperTelemetry.psm1') -Force
+if ($TelemetryLevel) { Set-DeveloperTelemetryLevel -Level $TelemetryLevel }
 try { $artifacts=@($ArtifactsJson|ConvertFrom-Json) } catch { throw "ArtifactsJson is invalid: $($_.Exception.Message)" }
 if ($Action -in @('Start','Instant') -and -not $Operation) { throw 'Operation is required.' }
 if ($Action -eq 'End' -and -not $EventId) { throw 'EventId is required for End.' }

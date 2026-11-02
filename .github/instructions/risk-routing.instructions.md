@@ -261,9 +261,9 @@ Do not update `AGENTS.md` for ordinary R0 changes (typo fix, formatting, comment
 
 ## 10. Graphify and R0
 
-Graphify architecture, scripts, refresh behavior, and caching are not redesigned for this Fast Lane. The Coordinator-owned preflight (`Test-ManagedFileIntegrity.ps1` plus `Refresh-BotGraph.ps1 -Mode Update`) remains mandatory for every risk level, but its successful evidence is passed to the Developer and, when `AUDIT_MODE` is `LIGHT` or `FULL`, to the Auditor rather than repeated at each handoff. A final source-state graph/integrity result is required for completion; when an Auditor is invoked, it consumes that result and it may be reused after Auditor PASS when fingerprints are unchanged.
+Graphify architecture, scripts, refresh behavior, and caching are not redesigned for this Fast Lane. Coordinator-owned managed integrity remains mandatory for every risk level; use Project Mapper first for existing executable projects. Successful evidence is passed to the Developer and, when `AUDIT_MODE` is `LIGHT` or `FULL`, to the Auditor rather than repeated at each handoff. Graphify is optional and on-demand under `graphify.instructions.md`, not a risk-lane gate. Final source-state Mapper/integrity evidence and any graph required by the approved analysis must be current; reuse matching evidence after Auditor PASS.
 
-What may be skipped for an eligible R0 change is task-level Graphify **discovery/query** work (`Query-BotGraph.ps1` broad relationship lookups for Impact Set discovery), only when every changed file is provably outside executable/project/dependency/graph-relevant structure (for example README wording, Markdown formatting, non-runtime documentation, a comments-only file):
+For an eligible R0 change provably outside executable/project/dependency/graph-relevant structure (for example README wording, Markdown formatting, non-runtime documentation, a comments-only file), no task-level graph discovery is needed:
 
 ```text
 GRAPHIFY_REQUIRED: false
@@ -271,7 +271,7 @@ REASON:
 Non-executable documentation-only R0 change.
 ```
 
-Do not skip Graphify discovery if the change affects project structure, executable files, workflows, dependencies, or graph-relevant relationships. Never weaken Graphify requirements for R1–R3.
+For executable/project/dependency changes, use the Mapper and direct source to establish impact, requesting Graphify only for unresolved material relationships, ambiguous cross-workflow impact, or approved graph analysis. Optional graph routing never weakens integrity, validation, UI capture, audit requirements, or R1–R3 risk lanes. Failure to resolve material impact remains a blocker.
 
 ## 11. Evidence fields
 
@@ -511,7 +511,7 @@ Use the existing `NONE | CONTEXT_ONLY | HUMAN_DOCS` system from `documentation.i
 
 ## 21. Graphify and R1
 
-Graphify architecture, scripts, refresh behavior, and caching are not redesigned for this lane. The Coordinator checks `project.json` first, always runs managed integrity, and runs cache-first `Refresh-BotGraph.ps1 -Mode Update` for existing bots. New bots defer graph discovery until the stable finalization step.
+Graphify architecture, scripts, refresh behavior, and caching are not redesigned for this lane. The Coordinator checks `project.json` first, always runs managed integrity, and uses the deterministic Project Mapper first for existing bots. Graphify is optional and on-demand only for unresolved material relationships, ambiguous cross-workflow impact, or approved graph analysis. New bots map stable source after implementation; graph finalization is required only when that analysis depended on it. `GRAPH_STATE: NOT_REQUIRED` never skips an applicable validation or audit gate.
 
 For an eligible R1 change with an already-narrow approved Impact Set, avoid unnecessary broad `Query-BotGraph.ps1` relationship lookups and use the existing Impact Set/graph context intelligently instead of re-querying broadly. Do not add Graphify caching, modify refresh architecture, introduce incremental Graphify, or weaken integrity controls. Report:
 

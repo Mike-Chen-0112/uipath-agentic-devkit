@@ -18,6 +18,7 @@ param(
     [string[]]$Constraint = @(),
     [string]$ExpectedSourceFingerprint = '',
     [string]$ExpectedGraphFingerprint = '',
+    [switch]$RequestGraph,
     [switch]$LocalizedScope,
     [switch]$ArchitectureChange,
     [switch]$ArgumentInterfaceChange,
@@ -170,12 +171,22 @@ function Test-PackageFreshness {
     $reasons = New-Object System.Collections.Generic.List[string]
     $snapshot = Get-CurrentFingerprint
     if ([string]$Package.freshness.sourceFingerprint -ne [string]$snapshot.sourceFingerprint) { Add-Reason $reasons 'SOURCE_FINGERPRINT_MISMATCH' }
-    if ([string]$Package.graph.fullGraphSha256 -and [string]$Package.freshness.graphConfigFingerprint -ne [string]$snapshot.graphConfigFingerprint) { Add-Reason $reasons 'GRAPH_CONFIG_FINGERPRINT_MISMATCH' }
-    $graphFile = Resolve-ProjectPath ([string]$Package.graph.fullGraphPath)
-    if ([string]$Package.graph.fullGraphSha256) {
+    $graphRequested = $Package.graph.requested -ne $false
+    if ($graphRequested) {
+        if ($Package.graph.state -ne 'PASS' -or -not $Package.graph.refreshStateSha256) { Add-Reason $reasons 'GRAPH_NOT_VALIDATED' }
+        if ([string]$Package.freshness.graphConfigFingerprint -ne [string]$snapshot.graphConfigFingerprint) { Add-Reason $reasons 'GRAPH_CONFIG_FINGERPRINT_MISMATCH' }
+        $graphFile = Resolve-ProjectPath ([string]$Package.graph.fullGraphPath)
         if (-not (Test-Path -LiteralPath $graphFile -PathType Leaf)) { Add-Reason $reasons 'GRAPH_MISSING' }
         elseif ([string]$Package.graph.fullGraphSha256 -ne (Get-Sha256 $graphFile)) { Add-Reason $reasons 'GRAPH_FINGERPRINT_MISMATCH' }
+        if ($Package.graph.refreshStateSha256) {
+            $refreshFile = Resolve-ProjectPath ([string]$Package.graph.refreshStatePath)
+            if (-not (Test-Path -LiteralPath $refreshFile -PathType Leaf) -or
+                [string]$Package.graph.refreshStateSha256 -ne (Get-Sha256 $refreshFile)) { Add-Reason $reasons 'GRAPH_REFRESH_STATE_MISMATCH' }
+        }
     }
+    $mapFile = Resolve-ProjectPath ([string]$Package.freshness.projectMapPath)
+    if (-not (Test-Path -LiteralPath $mapFile -PathType Leaf)) { Add-Reason $reasons 'PROJECT_MAP_MISSING' }
+    elseif ([string]$Package.freshness.projectMapSha256 -ne (Get-Sha256 $mapFile)) { Add-Reason $reasons 'PROJECT_MAP_FINGERPRINT_MISMATCH' }
     foreach ($source in @($Package.sourceAccess.paths)) {
         $sourceFile = Resolve-ProjectPath ([string]$source.path)
         if (-not (Test-Path -LiteralPath $sourceFile -PathType Leaf)) { Add-Reason $reasons 'RELEVANT_WORKFLOW_NOT_FOUND'; continue }
@@ -355,21 +366,29 @@ $fullGraphPath = Resolve-ProjectPath $GraphPath
 $fullGraphRefreshPath = Resolve-ProjectPath $GraphRefreshStatePath
 $graph = $null
 $refreshState = $null
-# A graph is optional; an absent graph must not force a full-context fallback.
-# Explicit expected fingerprints still require a matching graph.
-if ($ExpectedGraphFingerprint -and (Test-Path -LiteralPath $fullGraphPath -PathType Leaf)) {
-    $graph = [System.IO.File]::ReadAllText($fullGraphPath, [System.Text.Encoding]::UTF8) | ConvertFrom-Json
-} elseif ($ExpectedGraphFingerprint) { Add-Reason $fallbackReasons 'GRAPH_MISSING' }
-if ($ExpectedGraphFingerprint -and (Test-Path -LiteralPath $fullGraphRefreshPath -PathType Leaf)) {
-    $refreshState = [System.IO.File]::ReadAllText($fullGraphRefreshPath, [System.Text.Encoding]::UTF8) | ConvertFrom-Json
-} elseif ($ExpectedGraphFingerprint) { Add-Reason $fallbackReasons 'GRAPH_REFRESH_STATE_MISSING' }
-# Use graph artifacts only when the handoff explicitly requires their fingerprint.
-# A pre-existing stale graph must not invalidate a Mapper-only task.
-if (-not $ExpectedGraphFingerprint) { $graph = $null; $refreshState = $null }
-if ($refreshState) {
-    if ([string]$refreshState.sourceFingerprint -ne [string]$snapshot.sourceFingerprint) { Add-Reason $fallbackReasons 'GRAPH_FINGERPRINT_MISMATCH' }
-    if ($ExpectedGraphFingerprint -and [string]$refreshState.sourceFingerprint -ne $ExpectedGraphFingerprint) { Add-Reason $fallbackReasons 'GRAPH_FINGERPRINT_MISMATCH' }
-    if ([string]$refreshState.graphConfigFingerprint -ne [string]$snapshot.graphConfigFingerprint) { Add-Reason $fallbackReasons 'GRAPH_CONFIG_FINGERPRINT_MISMATCH' }
+$graphRequested = $RequestGraph -or [bool]$ExpectedGraphFingerprint -or $GraphConflict
+if ($graphRequested) {
+    try {
+        if (-not (Test-Path -LiteralPath $fullGraphPath -PathType Leaf)) { Add-Reason $fallbackReasons 'GRAPH_MISSING' }
+        else {
+            $graph = [System.IO.File]::ReadAllText($fullGraphPath, [System.Text.Encoding]::UTF8) | ConvertFrom-Json
+            if ($graph -isnot [pscustomobject] -or $graph.nodes -isnot [array] -or $graph.edges -isnot [array]) { throw 'Invalid requested graph structure.' }
+        }
+        if (-not (Test-Path -LiteralPath $fullGraphRefreshPath -PathType Leaf)) { Add-Reason $fallbackReasons 'GRAPH_REFRESH_STATE_MISSING' }
+        else {
+            $refreshState = [System.IO.File]::ReadAllText($fullGraphRefreshPath, [System.Text.Encoding]::UTF8) | ConvertFrom-Json
+            if ($refreshState -isnot [pscustomobject] -or $refreshState.schemaVersion -ne 2 -or
+                $refreshState.fingerprintSchemaVersion -ne $snapshot.schemaVersion -or -not $refreshState.refreshedAtUtc) {
+                throw 'Invalid requested graph refresh metadata.'
+            }
+            [void][DateTime]::Parse([string]$refreshState.refreshedAtUtc, [Globalization.CultureInfo]::InvariantCulture, [Globalization.DateTimeStyles]::RoundtripKind)
+        }
+        if ($refreshState) {
+            if ([string]$refreshState.sourceFingerprint -ne [string]$snapshot.sourceFingerprint) { Add-Reason $fallbackReasons 'GRAPH_FINGERPRINT_MISMATCH' }
+            if ($ExpectedGraphFingerprint -and [string]$refreshState.sourceFingerprint -ne $ExpectedGraphFingerprint) { Add-Reason $fallbackReasons 'GRAPH_FINGERPRINT_MISMATCH' }
+            if ([string]$refreshState.graphConfigFingerprint -ne [string]$snapshot.graphConfigFingerprint) { Add-Reason $fallbackReasons 'GRAPH_CONFIG_FINGERPRINT_MISMATCH' }
+        }
+    } catch { Add-Reason $fallbackReasons 'GRAPH_MALFORMED'; $graph = $null; $refreshState = $null }
 }
 $relevantNodes = @()
 $relevantGraphEdges = @()
@@ -379,9 +398,13 @@ if ($graph) {
     $relevantGraphEdges = @($graph.edges | Where-Object { [string]$_.source -in $nodeIds -and [string]$_.target -in $nodeIds } | ForEach-Object { [pscustomobject][ordered]@{ source = [string]$_.source; target = [string]$_.target; relation = [string]$_.relation; confidence = [string]$_.confidence } })
 }
 $graphSummary = [ordered]@{
+    requested = [bool]$graphRequested
+    state = if (-not $graphRequested) { 'NOT_REQUESTED' } elseif ($graph -and $refreshState -and -not @($fallbackReasons | Where-Object { $_ -like 'GRAPH_*' }).Count) { 'PASS' } else { 'BLOCKED' }
     fullGraphPath = Get-RelativePath $fullGraphPath
-    graphSummaryPath = if (Test-Path -LiteralPath (Resolve-ProjectPath $GraphSummaryPath)) { Get-RelativePath (Resolve-ProjectPath $GraphSummaryPath) } else { $null }
+    graphSummaryPath = if ($graphRequested -and (Test-Path -LiteralPath (Resolve-ProjectPath $GraphSummaryPath))) { Get-RelativePath (Resolve-ProjectPath $GraphSummaryPath) } else { $null }
     fullGraphSha256 = if ($graph) { Get-Sha256 $fullGraphPath } else { $null }
+    refreshStatePath = if ($graphRequested) { Get-RelativePath $fullGraphRefreshPath } else { $null }
+    refreshStateSha256 = if ($refreshState) { Get-Sha256 $fullGraphRefreshPath } else { $null }
     nodeCount = if ($graph) { @($graph.nodes).Count } else { 0 }
     edgeCount = if ($graph) { @($graph.edges).Count } else { 0 }
     relevantNodes = $relevantNodes
@@ -390,6 +413,7 @@ $graphSummary = [ordered]@{
     graphConfigFingerprint = if ($refreshState) { [string]$refreshState.graphConfigFingerprint } else { $null }
     refreshedAtUtc = if ($refreshState) { [string]$refreshState.refreshedAtUtc } else { $null }
 }
+if ($graphRequested -and $graphSummary.state -ne 'PASS') { Add-Reason $fallbackReasons 'GRAPH_NOT_VALIDATED' }
 
 $package = [ordered]@{
     schemaVersion = 1

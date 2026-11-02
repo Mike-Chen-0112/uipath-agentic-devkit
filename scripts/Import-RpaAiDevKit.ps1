@@ -8,10 +8,19 @@ param(
 
     [switch]$Upgrade,
     [switch]$OverwriteManaged,
-    [switch]$EnableGraphify
+    [switch]$InstallGraphify,
+    [switch]$EnableGraphify,
+    [switch]$Json
 )
 
 $ErrorActionPreference = 'Stop'
+trap {
+    if ($Json) {
+        [ordered]@{ schemaVersion=1; contract='devkit.payload.import'; status='FAIL'; error=$_.Exception.Message; actions=@($actions | Select-Object Path,Action) } | ConvertTo-Json -Depth 5
+        exit 1
+    }
+    throw $_
+}
 function Test-IsReparsePoint {
     param([string]$Path)
 
@@ -116,6 +125,7 @@ $installed = if (Test-Path $installedManifestPath -PathType Leaf) {
 }
 
 if ($incoming.schemaVersion -ne 1) { throw "Unsupported payload manifest schema: $($incoming.schemaVersion)" }
+if ($incoming.profile -and $incoming.profile -notin @('Standard','Slim')) { throw "Unsupported payload profile: $($incoming.profile)" }
 if (-not $incoming.kitVersion) { throw 'Payload manifest kitVersion is required.' }
 if (-not $incoming.files -or @($incoming.files).Count -eq 0) { throw 'Payload manifest contains no files.' }
 foreach ($entry in @($incoming.gitignoreEntries)) {
@@ -230,7 +240,7 @@ if (-not $currentBlockMatch.Success) {
 
 $actions += [pscustomobject]@{ Path = '.gitignore (managed block)'; Action = $gitignoreAction; Source = $null; Destination = $gitignorePath }
 
-$actions | Select-Object Action,Path | Sort-Object Action,Path | Format-Table -AutoSize
+if (-not $Json) { $actions | Select-Object Action,Path | Sort-Object Action,Path | Format-Table -AutoSize }
 
 $blocked = @($actions | Where-Object Action -in @('CONFLICT','NEEDS_UPGRADE'))
 if ($blocked.Count -gt 0) {
@@ -331,11 +341,19 @@ finally {
 }
 
 try {
-    & $activationEntries[0].Destination -TargetBotPath $TargetBotPath -EnableGraphify:$EnableGraphify
+    $activationParameters = @{ TargetBotPath = $TargetBotPath }
+    if ($InstallGraphify) { $activationParameters.InstallGraphify = $true }
+    if ($EnableGraphify) { $activationParameters.EnableGraphify = $true }
+    if ($Json) { & $activationEntries[0].Destination @activationParameters | Out-Host }
+    else { & $activationEntries[0].Destination @activationParameters }
 } catch {
     throw "Dev Kit files were imported, but mandatory activation failed. Fix the local prerequisite and run '.rpa-ai\scripts\Activate-RpaAiDevKit.ps1': $($_.Exception.Message)"
 }
 
+if ($Json) {
+    [ordered]@{ schemaVersion=1; contract='devkit.payload.import'; status='PASS'; kitVersion=$incoming.kitVersion; profile=$(if ($incoming.profile) { $incoming.profile } else { 'Standard' }); targetBotPath=$TargetBotPath; actions=@($actions | Select-Object Path,Action); removedPaths=@() } | ConvertTo-Json -Depth 5
+    exit 0
+}
 Write-Host "[PASS] RPA AI Dev Kit $($incoming.kitVersion) imported into $TargetBotPath"
 Write-Host "Managed files changed: $(@($actions | Where-Object Action -in @('ADD','UPGRADE','OVERWRITE')).Count)"
 Write-Host "Bot-owned files preserved: $(@($actions | Where-Object Action -eq 'PRESERVE').Count)"

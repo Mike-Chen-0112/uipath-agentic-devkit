@@ -77,9 +77,9 @@ Every new or changed log should be:
 
 ## Bot knowledge graph
 
-- Each bot owns its own Graphify output. Do not create a cross-bot graph in the central Dev Kit. Graphify is reuse-first for existing bots and deferred until stable finalization for new bots; refresh once when the source fingerprint requires it.
+- Use the deterministic UiPath Project Mapper first for workflow navigation and impact analysis. Graphify is optional and on-demand for material unresolved relationships, ambiguous cross-workflow impact, or approved graph analysis. Each bot owns any graph it uses; do not create a cross-bot graph in the central Dev Kit.
 - The graph is for retrieval and impact analysis; current UiPath source remains authoritative.
-- Graphify is a mandatory bot-development dependency. The Coordinator runs managed-file integrity and, for an existing project, reuses or refreshes the bot-local graph before planning; new-bot work defers graph discovery until stable finalization. Pass the source fingerprint and graph state to downstream agents. Refresh final source state once when it changes; reuse final evidence after an Auditor PASS when fingerprints are unchanged.
+- Managed-file integrity remains mandatory. The Coordinator passes current source fingerprints, Mapper state, Impact Set, and optional graph state to downstream agents; `GRAPH_STATE: NOT_REQUIRED` is valid when no graph is needed. Handoff alone never requires a remap, graph installation, or repeated preflight. If graph-dependent analysis is required, use `Activate-RpaAiDevKit.ps1 -EnableGraphify`, refresh only for stale relevant fingerprints, and diagnose or block that analysis on failure.
 - Graphing is code/XAML local-only. Do not enable semantic extraction of docs/media/Office files or any remote Graphify backend.
 - Use the Dev Kit query/refresh wrappers so Graphify can be replaced without changing agent methodology.
 
@@ -94,7 +94,7 @@ Every new or changed log should be:
 
 - Developer servers may provide no administrator access and may install tools separately in each Windows user profile.
 - Never assume `uip`, npm, Graphify, uv, pipx, Python, Node.js, or .NET is globally installed or available on `PATH`.
-- Dev Kit activation installs missing portable Node.js/npm and `uv` under the current user's profile before installing the UiPath CLI and Graphify packages.
+- Dev Kit activation prepares required user-scoped tooling for the official UiPath CLI; Graphify and its prerequisites are enabled on demand, not mandatory bot dependencies.
 - Use `.rpa-ai/scripts/Resolve-DevKitTool.ps1` before direct tool execution. The resolver checks the current process, saved paths, and common per-user locations, then stores verified paths in ignored `.rpa-ai/local/tool-paths.json`.
 - Do not require the user to edit machine or user `PATH` when a valid profile installation can be resolved directly.
 
@@ -106,6 +106,8 @@ Dependency setup is a **pre-development gate**. For every behavioral change, set
 ## Browser UI automation
 
 Browser UI work uses a **capture-first** policy. Any click, type, select, read, extract, submit, navigation, hover, upload/download-through-UI, or state check automatically sets `UI_CAPTURE_REQUIRED = true`.
+
+Use installed official UiPath Skills, package guides, and current CLI help first. Inventory the official Object Repository before live target discovery through `Get-OfficialObjectRepository.ps1`; OR inventory (`INVENTORY_UNVERIFIED`) is not live capture proof. Validate or capture targets with official UIA tooling before authoring. Preserve existing legacy Registry/inline targets and their bounded compatibility path; do not create a parallel registry for new targets.
 
 For new browser work, Chrome is the default Development browser unless the requirement, existing project, or target application explicitly requires another browser. For UiPath workflows, prefer UiPath UI Automation activities and Object Repository/captured descriptors over coded workflows or external browser libraries. Code is an exception when explicitly requested, already established by the project, or required because no suitable UiPath activity exists; document that reason.
 
@@ -150,4 +152,4 @@ An AI-generated RPA change is done only when:
 7. behavioral R1 `AUDIT_MODE: NONE` has Developer self-review PASS, or the invoked Auditor returns PASS,
 8. residual assumptions/risks are disclosed,
 9. managed Dev Kit integrity passes,
-10. the bot-local graph is refreshed and verified.
+10. final Mapper evidence is current and any graph required by the approved analysis is refreshed or validly reused; an unused graph is `NOT_REQUIRED`, not an omitted mandatory gate.

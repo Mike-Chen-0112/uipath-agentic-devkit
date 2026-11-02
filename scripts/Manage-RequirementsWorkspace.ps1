@@ -5,7 +5,7 @@ param(
     [string]$ProjectPath = (Get-Location).Path,
     [string]$TemplatePath = (Join-Path (Split-Path $PSScriptRoot -Parent) 'templates\REQUIREMENTS.md'),
     [string]$ParentEventId = '',
-    [bool]$DetailedTelemetry = $true,
+    [switch]$DetailedTelemetry,
     [switch]$ReadEntryPoint,
     [switch]$Json
 )
@@ -20,9 +20,12 @@ if ($Action -eq 'InitializeNew' -and -not (Test-Path -LiteralPath $projectFile -
 $requirementsPath = Join-Path $ProjectPath 'Requirements'
 $entryPointPath = Join-Path $requirementsPath 'REQUIREMENTS.md'
 $telemetryModule = Join-Path $PSScriptRoot 'DeveloperTelemetry.psm1'
-$telemetryEnabled = $DetailedTelemetry -and (Test-Path -LiteralPath (Join-Path $ProjectPath '.ai\evidence\execution-state.json') -PathType Leaf) -and
+$telemetryEnabled = (Test-Path -LiteralPath (Join-Path $ProjectPath '.ai\evidence\execution-state.json') -PathType Leaf) -and
     (Test-Path -LiteralPath $telemetryModule -PathType Leaf)
-if ($telemetryEnabled) { Import-Module $telemetryModule -Force -DisableNameChecking }
+if ($telemetryEnabled) {
+    Import-Module $telemetryModule -Force -DisableNameChecking
+    $telemetryEnabled = $DetailedTelemetry -or (Get-DeveloperTelemetryLevel) -eq 'Detailed'
+}
 
 $supportedTypes = [ordered]@{
     '.md' = 'markdown'; '.txt' = 'text'; '.docx' = 'word'; '.pdf' = 'pdf'

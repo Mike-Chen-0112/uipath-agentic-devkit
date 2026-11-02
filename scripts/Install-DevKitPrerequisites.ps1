@@ -1,7 +1,8 @@
 [CmdletBinding()]
 param(
     [string]$TargetBotPath = (Get-Location).Path,
-    [switch]$IncludeGraphify
+    [Alias('IncludeGraphify')]
+    [switch]$InstallGraphify
 )
 
 $ErrorActionPreference = 'Stop'
@@ -205,22 +206,22 @@ try {
         $npmCommand = Resolve-DevKitTool -Name npm -TargetBotPath $TargetBotPath
         if (-not (Test-DevKitCommand $npmCommand)) { Install-PortableNode }
     }
-    if ($IncludeGraphify) {
-    $graphifyCommand = Resolve-DevKitTool -Name graphify -TargetBotPath $TargetBotPath
-    if (-not (Test-DevKitCommand -Command $graphifyCommand -IsGraphify)) {
+        if ($InstallGraphify) {
+            $graphifyCommand = Resolve-DevKitTool -Name graphify -TargetBotPath $TargetBotPath
+            if (-not (Test-DevKitCommand -Command $graphifyCommand -IsGraphify)) {
         $uvCommand = Resolve-DevKitTool -Name uv -TargetBotPath $TargetBotPath
         $pipxCommand = Resolve-DevKitTool -Name pipx -TargetBotPath $TargetBotPath
         if (-not (Test-DevKitCommand $uvCommand) -and -not (Test-DevKitCommand $pipxCommand)) {
             Install-PortableUv
         }
+            }
     }
 
-    }
     if (-not (Resolve-DevKitTool -Name uip -TargetBotPath $TargetBotPath)) {
         $npmCommand = Resolve-DevKitTool -Name npm -TargetBotPath $TargetBotPath -Required
         if (-not (Test-DevKitCommand $npmCommand)) { throw 'User-scoped npm verification failed.' }
     }
-    if ($IncludeGraphify -and -not (Resolve-DevKitTool -Name graphify -TargetBotPath $TargetBotPath)) {
+    if ($InstallGraphify -and -not (Resolve-DevKitTool -Name graphify -TargetBotPath $TargetBotPath)) {
         $uvOrPipx = Resolve-DevKitTool -Name uv -TargetBotPath $TargetBotPath
         if (-not $uvOrPipx) { $uvOrPipx = Resolve-DevKitTool -Name pipx -TargetBotPath $TargetBotPath -Required }
         if (-not (Test-DevKitCommand $uvOrPipx)) { throw 'Graphify installer verification failed.' }

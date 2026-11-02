@@ -1,5 +1,19 @@
 Set-StrictMode -Version 2.0
 
+$script:TelemetryLevel = ''
+function Set-DeveloperTelemetryLevel {
+    param([ValidateSet('Summary','Detailed')][string]$Level)
+    $script:TelemetryLevel = $Level
+}
+function Get-DeveloperTelemetryLevel {
+    if ($script:TelemetryLevel) { return $script:TelemetryLevel }
+    if ($env:RPA_DEVKIT_TELEMETRY_LEVEL) {
+        if ($env:RPA_DEVKIT_TELEMETRY_LEVEL -notin @('Summary','Detailed')) { throw 'RPA_DEVKIT_TELEMETRY_LEVEL must be Summary or Detailed.' }
+        return $env:RPA_DEVKIT_TELEMETRY_LEVEL
+    }
+    return 'Summary'
+}
+
 $script:TelemetryCategories = @(
     'HOST_MODEL_GAP','SCAFFOLDING','PACKAGE','UIA','UI_TARGET','OBJECT_REPOSITORY',
     'SOURCE_READ','SOURCE_EDIT','SOURCE_REPAIR','MAPPER','GRAPHIFY','VALIDATION',
@@ -60,7 +74,15 @@ function Write-DeveloperLedgerRecord {
     )
     $ledgerDirectory = Split-Path $LedgerPath -Parent
     if (-not (Test-Path -LiteralPath $ledgerDirectory -PathType Container)) { New-Item -ItemType Directory -Force -Path $ledgerDirectory | Out-Null }
-    $line = ($Record | ConvertTo-Json -Depth 10 -Compress) + [Environment]::NewLine
+    $level = Get-DeveloperTelemetryLevel
+    $persistedRecord = [ordered]@{}
+    foreach ($key in $Record.Keys) {
+        $optionalDetail = $key -in @('bytesBefore','bytesAfter','hashBefore','hashAfter','inclusiveMilliseconds','exclusiveMilliseconds','elapsedMilliseconds')
+        if ($level -eq 'Summary' -and $optionalDetail -and $null -eq $Record[$key]) { continue }
+        $persistedRecord[$key] = $Record[$key]
+    }
+    $persistedRecord.telemetryLevel = $level
+    $line = ($persistedRecord | ConvertTo-Json -Depth 10 -Compress) + [Environment]::NewLine
     $bytes = [Text.Encoding]::UTF8.GetBytes($line)
     $stream = $null
     for ($attempt = 0; $attempt -lt $LockRetryCount; $attempt++) {
@@ -487,4 +509,4 @@ function Test-DeveloperTimingConsistencyData {
     return [pscustomobject][ordered]@{ schemaVersion=1; status=$status; toleranceMilliseconds=$ToleranceMilliseconds; wallClockMs=$breakdown.wallClockMs; activeExecutionMs=$breakdown.activeExecutionMs; userWaitMs=$breakdown.userWaitMs; externalInterruptionMs=$breakdown.externalInterruptionMs; reconciliationDeltaMs=$delta; failures=$failures.ToArray(); warnings=$warnings.ToArray(); attributionCoveragePct=$breakdown.attributionCoveragePct }
 }
 
-Export-ModuleMember -Function Resolve-DeveloperLedgerPath,Start-DeveloperEvent,Stop-DeveloperEvent,Add-DeveloperInstantEvent,Read-DeveloperEventLedger,Get-DeveloperRuntimeBreakdownData,Test-DeveloperTimingConsistencyData
+Export-ModuleMember -Function Resolve-DeveloperLedgerPath,Start-DeveloperEvent,Stop-DeveloperEvent,Add-DeveloperInstantEvent,Read-DeveloperEventLedger,Get-DeveloperRuntimeBreakdownData,Test-DeveloperTimingConsistencyData,Set-DeveloperTelemetryLevel,Get-DeveloperTelemetryLevel

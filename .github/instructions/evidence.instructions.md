@@ -22,7 +22,7 @@ Minimum evidence for a behavioral code change:
 - total wall-clock, active-execution, explicit user-wait seconds, stage intervals, command durations/exit/timeout/output evidence, and preserved prior run history;
 - execution-state byte size, abnormal-size warning, largest state sections/evidence artifacts, and command-output path/hash/size with only a bounded inline preview;
 - approved Executable Change Plan and R0-R3 risk classification,
-- Coordinator preflight (`PREFLIGHT_STATUS`, `MANAGED_CORE_STATUS`, `GRAPH_STATE`, source fingerprint) and structured Impact Set,
+- Coordinator preflight (`PREFLIGHT_STATUS`, `MANAGED_CORE_STATUS`, `PROJECT_MAP_STATE`, `GRAPH_STATE`, source fingerprint) and structured Impact Set; use `GRAPH_STATE: NOT_REQUIRED` when optional Graphify was not needed, retaining final Mapper/integrity evidence and any graph required by the approved analysis,
 - change classification,
 - impacted files/workflows,
 - source-control diff review,
@@ -44,6 +44,7 @@ For browser UI interactions, evidence must prove the **ordering and completeness
 - `UI_CAPTURE_REQUIRED: true`
 - `BROWSER_OPENED_OR_ATTACHED: true`
 - required target inventory
+- official Object Repository inventory status/reference kept separate from live target proof; `INVENTORY_UNVERIFIED` never satisfies `UI_CAPTURE_COMPLETE`; include legacy Registry evidence only when that compatibility path was used
 - captured/proven target count
 - one entry per target with screen/page, business action, capture route, descriptor/selector summary, and proof result
 - `UI_CAPTURE_COMPLETE: true` before implementation is reported
@@ -76,6 +77,10 @@ For a valid **GENERATED_SCAFFOLD_ONLY** change, normal technical validation evid
 Write generated evidence under `.ai/evidence/` when the task needs persistent output.
 
 Do not fabricate test results. If an applicable gate cannot run, mark it `NOT_RUN` with the reason and let the Auditor decide whether the task is BLOCKED. Do not mark scaffold-exempt gates as passed; mark them `EXEMPT_GENERATED_SCAFFOLD`.
+
+## Telemetry detail
+
+Summary is the default telemetry level for routine work; Detailed (`RPA_DEVKIT_TELEMETRY_LEVEL=Detailed`) is opt-in diagnostics. Reuse helper-generated stage/command summaries and compact path/hash/size references. Do not reconstruct optional per-source micro-events, inline full outputs, or invent unavailable host/model timings. Both levels retain applicable execution timing, command exit/timeout/output references, repair counts, source/dependency fingerprints, validation, UI/output proof, audit routing, and the same completion gates. A lower telemetry detail level never permits missing required evidence or a false PASS.
 
 ## Handoff and freshness evidence
 
