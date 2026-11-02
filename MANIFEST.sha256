@@ -41,6 +41,7 @@ ee84e8edc162f1e8160ad7bbff6920b559fd0ecb951119aa58f19f82ab3aa251  ./graph/.graph
 7bbf99d108a3237e63af81bd8e95fdc80de1bad30fc9ffe49f01031083134c37  ./graph/config/graphify-version.json
 6a7b840556e4d1465fe53b0beb9495fb5f039215548bc6c913f957aaf38ef031  ./graph/README.md
 dd390c4f37f510bc642595abe1faa00b5c3375747556b16d74ffc9ec500453d2  ./README.md
+9b4f328fa1cca94772f9a258bc422f97fbb73e437162fced0589d25d98ce96c9  ./releases/v0.12.2-bot-payload.json
 72becc7f1bdbbc02d9e21097b5f6ed4ba344ff48447513eb6ba757ad530b7420  ./scripts/Activate-RpaAiDevKit.ps1
 34bddf24f7a48293d05d2d3df138712c650de22b4b6205761dc137dee3ccfed2  ./scripts/Check-DevKitRemoteVersion.ps1
 e92e1bb727e62c679f0ed2f236f307a6f5827bb8555939208cb6e23bb24e6077  ./scripts/Complete-DeveloperRun.ps1
